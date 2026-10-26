@@ -1,0 +1,3787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrediControl Cloud - Reportes y Abonos por Marca</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- SheetJS (XLSX) para exportar a Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            fintech: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+            },
+            boutique: {
+              50: '#faf5ff',
+              100: '#f3e8ff',
+              200: '#e9d5ff',
+              500: '#a855f7',
+              600: '#9333ea',
+              700: '#7e22ce',
+              800: '#6b21a8'
+            },
+            exclusive: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af'
+            },
+            beauty: {
+              50: '#fdf2f8',
+              100: '#fce7f3',
+              200: '#fbcfe8',
+              500: '#ec4899',
+              600: '#db2777',
+              700: '#be185d',
+              800: '#9d174d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .modal-backdrop { transition: opacity 0.2s ease-in-out; }
+    .modal-card { transition: transform 0.2s ease-out, opacity 0.2s ease-out; }
+    .pulse-sync { animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake-anim { animation: shake 0.45s ease-in-out; }
+
+    .brand-radio-label { cursor: pointer; user-select: none; transition: all 0.2s ease; }
+    .brand-radio-input:checked + .brand-btn-boutique {
+      background: linear-gradient(135deg, #7e22ce, #9333ea);
+      color: #ffffff;
+      border-color: #6b21a8;
+      box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);
+      transform: translateY(-1px);
+    }
+    .brand-radio-input:checked + .brand-btn-exclusive {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color: #ffffff;
+      border-color: #1e40af;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      transform: translateY(-1px);
+    }
+    .brand-radio-input:checked + .brand-btn-beauty {
+      background: linear-gradient(135deg, #be185d, #e11d48);
+      color: #ffffff;
+      border-color: #9f1239;
+      box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen bg-slate-900 flex flex-col">
+
+  <!-- CONTENEDOR DE ALERTAS / TOAST -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. PANTALLA OBLIGATORIA DE INICIO DE SESIÓN (LOGIN)                       -->
+  <!-- ========================================================================= -->
+  <div id="loginScreen" class="fixed inset-0 z-[100] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4">
+    <div id="loginCard" class="w-full max-w-md bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6 text-white relative overflow-hidden">
+      
+      <!-- Destellos de fondo -->
+      <div class="absolute -top-24 -right-24 w-56 h-56 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-56 h-56 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Logotipo de Diamante y Título -->
+      <div class="text-center space-y-2 relative">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white text-3xl font-black mb-3">
+          <i class="fa-solid fa-gem"></i>
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white">CrediControl Cloud</h1>
+        <p class="text-xs text-slate-400">Control de Ventas a Crédito y Abonos por Marca</p>
+        
+        <!-- Distintivos de Marcas Oficiales -->
+        <div class="flex items-center justify-center gap-1.5 pt-1.5 flex-wrap">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-boutique-100 text-boutique-800 border border-boutique-200">
+            <i class="fa-solid fa-person-dress text-xs"></i> EPI Boutique
+          </span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-exclusive-100 text-exclusive-800 border border-exclusive-200">
+            <i class="fa-solid fa-crown text-[10px]"></i> Exclusive
+          </span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-beauty-100 text-beauty-800 border border-beauty-200">
+            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Beauty
+          </span>
+        </div>
+      </div>
+
+      <!-- Alerta de Error -->
+      <div id="loginErrorMsg" class="hidden p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+        <span id="loginErrorText">Usuario o contraseña incorrectos. Intente de nuevo.</span>
+      </div>
+
+      <!-- Formulario de Acceso -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4 relative">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Usuario</label>
+          <div class="relative">
+            <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+            <input type="text" id="loginUsername" required autocomplete="username" placeholder="Nombre de usuario"
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Contraseña</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition p-1">
+              <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-indigo-900/40 transition transform active:scale-[0.99] flex items-center justify-center gap-2">
+          <span>Ingresar al Sistema</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+
+      <div class="pt-3 border-t border-slate-800/80 text-center">
+        <p class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i> Acceso Seguro Protegido
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. APLICACIÓN PRINCIPAL (TRAS INICIAR SESIÓN)                             -->
+  <!-- ========================================================================= -->
+  <div id="mainApp" class="hidden min-h-screen flex-col bg-slate-50 flex-1">
+    
+    <!-- NAVBAR SUPERIOR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 gap-2">
+          
+          <!-- Logo Diamante & Marcas -->
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md">
+              <i class="fa-solid fa-gem text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900 tracking-tight text-lg">CREDICONTROL</span>
+                <span class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-boutique-100 text-boutique-800 border border-boutique-200">
+                  <i class="fa-solid fa-person-dress text-xs"></i> EPI Boutique
+                </span>
+                <span class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-exclusive-100 text-exclusive-800 border border-exclusive-200">
+                  <i class="fa-solid fa-crown text-[9px]"></i> Exclusive
+                </span>
+                <span class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-beauty-100 text-beauty-800 border border-beauty-200">
+                  <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Beauty
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 hidden sm:block">Control de Cartera de Crédito y Abonos por Marca</p>
+            </div>
+          </div>
+
+          <!-- Botones de Acción de Navbar -->
+          <div class="flex items-center gap-2 sm:gap-2.5">
+            
+            <!-- BOTÓN DESTACADO: REPORTE POR MARCA -->
+            <button onclick="openBrandReportModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm transition" title="Reporte Financiero y Comparativa por Marca">
+              <i class="fa-solid fa-chart-pie text-xs"></i>
+              <span>Reporte por Marca</span>
+            </button>
+
+            <!-- Estado Conexión Google Sheets / Nube -->
+            <button id="btnSheetsStatus" onclick="openSheetsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl border transition shadow-sm bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100" title="Configurar respaldo en Google Sheets">
+              <span id="cloudStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span id="cloudStatusText" class="hidden sm:inline">Nube Conectada</span>
+              <i class="fa-solid fa-cloud-arrow-up text-xs text-slate-500"></i>
+            </button>
+
+            <!-- Exportar a Excel -->
+            <button onclick="exportToExcelWorkbook()" class="inline-flex items-center gap-1 px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm" title="Descargar libro Excel completo">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>
+              <span class="hidden md:inline">Excel</span>
+            </button>
+
+            <!-- Registrar Cliente -->
+            <button onclick="openClientCreationModal()" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition">
+              <i class="fa-solid fa-user-plus text-xs"></i>
+              <span class="hidden sm:inline">Cliente</span>
+            </button>
+
+            <!-- Nueva Venta -->
+            <button onclick="openGlobalSaleModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm transition">
+              <i class="fa-solid fa-cart-plus text-xs"></i>
+              <span>Venta</span>
+            </button>
+
+            <!-- Registrar Abono -->
+            <button onclick="openGlobalPaymentModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl bg-fintech-600 hover:bg-fintech-700 text-white shadow-sm shadow-fintech-200 transition">
+              <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
+              <span>Abonar</span>
+            </button>
+
+            <!-- CERRAR SESIÓN -->
+            <button onclick="logoutSession()" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition" title="Cerrar Sesión">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span class="hidden lg:inline">Salir</span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- BARRA DE INFORMACIÓN DE SINCRONIZACIÓN -->
+    <div id="syncBannerBar" class="bg-slate-100 border-b border-slate-200 px-4 py-1.5 text-xs text-slate-600">
+      <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span id="syncIndicatorIcon"><i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i></span>
+          <span id="syncLastTimeLabel">Sincronización en la nube: Firestore & Google Sheets Activo</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="triggerFullSync()" id="btnQuickSync" class="text-fintech-700 font-semibold hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-rotate text-[11px]"></i> Sincronizar Ahora
+          </button>
+          <span class="text-slate-400 hidden sm:inline">|</span>
+          <button onclick="openSheetsModal()" class="text-indigo-600 font-medium hover:underline text-xs">
+            <i class="fa-solid fa-gear text-[11px]"></i> Ajustes de Nube / Sheets
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+      <!-- TARJETAS DE MÉTRICAS (KPIS) CON DESGLOSE POR MARCA -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Deuda Total Global -->
+        <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-rose-500">Deuda Total Cartera</p>
+            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+              <i class="fa-solid fa-money-bill-trend-up"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <h3 id="statTotalDebt" class="text-2xl font-black text-rose-700">$0.00</h3>
+            <p class="text-[11px] text-slate-400">Suma total pendiente en todas las marcas</p>
+          </div>
+        </div>
+
+        <!-- Deuda en EPI Boutique -->
+        <div class="bg-white p-5 rounded-2xl border border-boutique-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-person-dress text-boutique-600"></i>
+              <p class="text-xs font-bold uppercase tracking-wider text-boutique-700">EPI Boutique</p>
+            </div>
+            <span class="text-[10px] bg-boutique-50 text-boutique-700 px-2 py-0.5 rounded-full font-bold border border-boutique-200">Marca</span>
+          </div>
+          <div class="mt-2">
+            <h3 id="statDebtBoutique" class="text-2xl font-black text-boutique-700">$0.00</h3>
+            <p class="text-[11px] text-slate-400">Deuda por cobrar en Boutique</p>
+          </div>
+        </div>
+
+        <!-- Deuda en Exclusive -->
+        <div class="bg-white p-5 rounded-2xl border border-exclusive-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-crown text-exclusive-600"></i>
+              <p class="text-xs font-bold uppercase tracking-wider text-exclusive-700">Exclusive</p>
+            </div>
+            <span class="text-[10px] bg-exclusive-50 text-exclusive-700 px-2 py-0.5 rounded-full font-bold border border-exclusive-200">Marca</span>
+          </div>
+          <div class="mt-2">
+            <h3 id="statDebtExclusive" class="text-2xl font-black text-exclusive-700">$0.00</h3>
+            <p class="text-[11px] text-slate-400">Deuda por cobrar en Exclusive</p>
+          </div>
+        </div>
+
+        <!-- Deuda en Beauty -->
+        <div class="bg-white p-5 rounded-2xl border border-beauty-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-beauty-600"></i>
+              <p class="text-xs font-bold uppercase tracking-wider text-beauty-700">Beauty</p>
+            </div>
+            <span class="text-[10px] bg-beauty-50 text-beauty-700 px-2 py-0.5 rounded-full font-bold border border-beauty-200">Marca</span>
+          </div>
+          <div class="mt-2">
+            <h3 id="statDebtBeauty" class="text-2xl font-black text-beauty-700">$0.00</h3>
+            <p class="text-[11px] text-slate-400">Deuda por cobrar en Beauty</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SEGUNDA FILA DE KPIs (TOTAL ABONADO Y CLIENTES) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Total Recaudado en Abonos</p>
+            <h4 id="statTotalPaid" class="text-xl font-black text-emerald-600">$0.00</h4>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-circle-dollar-to-slot"></i>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Clientes con Saldo Deudor</p>
+            <h4 id="statDebtorCount" class="text-xl font-black text-amber-600">0</h4>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-user-clock"></i>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Total Clientes en Cartera</p>
+            <h4 id="statTotalClients" class="text-xl font-black text-indigo-600">0</h4>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA PRINCIPAL DE CUENTAS POR COBRAR -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        
+        <!-- Barra de Búsqueda y Filtros -->
+        <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Listado de Cuentas por Cobrar & Clientes</h2>
+            <p class="text-xs text-slate-500">Muestra la deuda discriminada por Marca (Boutique, Exclusive, Beauty) y el saldo deudor consolidado.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            <!-- Input Búsqueda -->
+            <div class="relative flex-1 sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input type="text" id="searchInput" oninput="renderClientsTable()" placeholder="Buscar cliente o cédula..." 
+                class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Filtro de estado -->
+            <select id="filterStatus" onchange="renderClientsTable()" class="px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700">
+              <option value="debt" selected>Con Saldo Pendiente</option>
+              <option value="all">Todos los clientes</option>
+              <option value="paid">Solventes / Al Día ($0.00)</option>
+            </select>
+
+            <!-- Acceso directo al nuevo reporte -->
+            <button onclick="openBrandReportModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition shadow-sm">
+              <i class="fa-solid fa-file-invoice-dollar text-violet-600"></i>
+              <span>Reporte Financiero</span>
+            </button>
+
+            <!-- Imprimir Reporte Consolidado -->
+            <button onclick="printGeneralReport()" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition" title="Imprimir Reporte General">
+              <i class="fa-solid fa-print"></i>
+              <span class="hidden sm:inline">Imprimir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50/80 text-slate-500 uppercase font-semibold text-xs border-b border-slate-200">
+                <th class="py-3.5 px-4 sm:px-6">Cliente & Documento</th>
+                <th class="py-3.5 px-4">Deuda por Marca</th>
+                <th class="py-3.5 px-4 text-right">Total Compras</th>
+                <th class="py-3.5 px-4 text-right">Total Abonado</th>
+                <th class="py-3.5 px-4 text-right">Saldo Deudor Total</th>
+                <th class="py-3.5 px-4 text-center">Estado</th>
+                <th class="py-3.5 px-4 sm:px-6 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clientsTableBody" class="divide-y divide-slate-100">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mensaje sin resultados -->
+        <div id="noDataMessage" class="hidden py-12 text-center">
+          <i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i>
+          <p class="text-slate-500 text-sm">No se encontraron clientes con los filtros aplicados.</p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REPORTE GENERAL Y COMPARATIVO POR MARCA (z-50)                     -->
+  <!-- ========================================================================= -->
+  <div id="modalBrandReport" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 modal-backdrop">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden modal-card border border-slate-200">
+      
+      <!-- Encabezado del Reporte -->
+      <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 text-white flex items-center justify-center font-black text-xl shadow-lg">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-lg sm:text-xl font-black text-white">Reporte Financiero por Marca</h2>
+              <span class="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Auditoría en Tiempo Real
+              </span>
+            </div>
+            <p class="text-xs text-slate-300 mt-0.5">Ventas a crédito, recaudación por abonos, cobranza efectiva y deuda pendiente por marca</p>
+          </div>
+        </div>
+
+        <!-- Botones de Acción de Reporte -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="exportBrandReportToExcel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
+            <i class="fa-solid fa-file-excel"></i> Exportar Reporte
+          </button>
+          <button onclick="printBrandFinancialReport()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white text-slate-900 hover:bg-slate-100 shadow-sm transition">
+            <i class="fa-solid fa-print text-indigo-600"></i> Imprimir A4
+          </button>
+          <button onclick="closeModalDirect('modalBrandReport')" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros de Fecha -->
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="font-bold text-slate-600 uppercase mr-1"><i class="fa-regular fa-calendar text-indigo-600"></i> Período:</span>
+          <button onclick="setReportPeriod('all')" id="repFilterAll" class="px-3 py-1.5 font-bold rounded-xl bg-indigo-600 text-white shadow-sm">Todo el Histórico</button>
+          <button onclick="setReportPeriod('today')" id="repFilterToday" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Hoy</button>
+          <button onclick="setReportPeriod('week')" id="repFilterWeek" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Esta Semana</button>
+          <button onclick="setReportPeriod('month')" id="repFilterMonth" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Este Mes</button>
+          <button onclick="toggleCustomRangeBox()" id="repFilterCustom" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Rango Personalizado</button>
+        </div>
+
+        <div id="customDateRangeBox" class="hidden items-center gap-2 flex-wrap">
+          <input type="date" id="repStartDate" class="px-2.5 py-1 rounded-lg border border-slate-300 text-xs">
+          <span class="text-slate-400">hasta</span>
+          <input type="date" id="repEndDate" class="px-2.5 py-1 rounded-lg border border-slate-300 text-xs">
+          <button onclick="applyCustomDateRange()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition">Filtrar</button>
+        </div>
+
+        <div class="text-slate-500 font-semibold" id="reportPeriodLabel">
+          Mostrando: Histórico Completo
+        </div>
+      </div>
+
+      <!-- CUERPO SCROLLEABLE DEL REPORTE -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        
+        <!-- 1. Tarjetas Resumen Global del Período -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-sm border border-slate-800">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Ventas a Crédito</span>
+            <div id="repGlobalSales" class="text-2xl font-black text-white mt-1">$0.00</div>
+            <p class="text-[11px] text-indigo-300 mt-1">Créditos otorgados en el período</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-emerald-900 to-teal-950 text-white p-4 rounded-2xl shadow-sm border border-emerald-800">
+            <span class="text-[10px] uppercase font-bold text-emerald-300 tracking-wider">Total Abonos Recaudados</span>
+            <div id="repGlobalPaid" class="text-2xl font-black text-emerald-400 mt-1">$0.00</div>
+            <p class="text-[11px] text-emerald-200 mt-1">Cobranza líquida recibida</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-rose-950 to-red-950 text-white p-4 rounded-2xl shadow-sm border border-rose-900">
+            <span class="text-[10px] uppercase font-bold text-rose-300 tracking-wider">Saldo Deudor Pendiente</span>
+            <div id="repGlobalDebt" class="text-2xl font-black text-rose-400 mt-1">$0.00</div>
+            <p class="text-[11px] text-rose-200 mt-1">Cartera activa por cobrar</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-indigo-900 to-purple-950 text-white p-4 rounded-2xl shadow-sm border border-purple-900">
+            <span class="text-[10px] uppercase font-bold text-purple-300 tracking-wider">Efectividad de Cobranza</span>
+            <div id="repGlobalRate" class="text-2xl font-black text-purple-300 mt-1">0.0%</div>
+            <div class="w-full bg-slate-700/50 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div id="repGlobalRateBar" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-1.5 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Tabla Matriz Comparativa por Marca -->
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
+              Cuadro Comparativo por Marca (Boutique, Exclusive, Beauty)
+            </h3>
+            <span class="text-xs text-slate-500">Métricas consolidadas de venta vs. recaudación</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100/70 text-slate-500 uppercase font-semibold text-xs border-b border-slate-200">
+                  <th class="py-3 px-4">Marca</th>
+                  <th class="py-3 px-4 text-right">Ventas Crédito ($)</th>
+                  <th class="py-3 px-4 text-right">Abonos Cobrados ($)</th>
+                  <th class="py-3 px-4 text-right">Deuda Pendiente ($)</th>
+                  <th class="py-3 px-4 text-center">% Cobrado</th>
+                  <th class="py-3 px-4 w-44">Progreso de Recuperación</th>
+                </tr>
+              </thead>
+              <tbody id="repBrandTableBody" class="divide-y divide-slate-100">
+                <!-- Generado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Desglose de Abonos por Método de Pago y por Marca -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i class="fa-solid fa-wallet text-emerald-600"></i>
+              Recaudación por Método de Pago en el Período
+            </h4>
+            <div id="repPaymentMethodsContainer" class="space-y-2.5 pt-1"></div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i class="fa-solid fa-pie-chart text-purple-600"></i>
+              Distribución de la Deuda Activa por Marca
+            </h4>
+            <div id="repDebtDistributionContainer" class="space-y-3 pt-1"></div>
+          </div>
+        </div>
+
+        <!-- 4. Ranking de Clientes con Mayor Deuda por Marca -->
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-ranking-star text-amber-500"></i>
+                Ranking de Deudores por Marca
+              </h3>
+              <p class="text-xs text-slate-500">Filtra para auditar exactamente quién le debe a cada tienda</p>
+            </div>
+            
+            <div class="flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-xl">
+              <button onclick="setDebtorRankingFilter('ALL')" id="rankBtnAll" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Todas</button>
+              <button onclick="setDebtorRankingFilter('EPI Boutique')" id="rankBtnBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg text-boutique-700 hover:bg-boutique-50">EPI Boutique</button>
+              <button onclick="setDebtorRankingFilter('Exclusive')" id="rankBtnExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg text-exclusive-700 hover:bg-exclusive-50">Exclusive</button>
+              <button onclick="setDebtorRankingFilter('Beauty')" id="rankBtnBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg text-beauty-700 hover:bg-beauty-50">Beauty</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100/70 text-slate-500 uppercase font-semibold text-xs border-b border-slate-200">
+                  <th class="py-3 px-4">#</th>
+                  <th class="py-3 px-4">Cliente / Contacto</th>
+                  <th class="py-3 px-4 text-right">Deuda Boutique</th>
+                  <th class="py-3 px-4 text-right">Deuda Exclusive</th>
+                  <th class="py-3 px-4 text-right">Deuda Beauty</th>
+                  <th class="py-3 px-4 text-right">Deuda Total</th>
+                  <th class="py-3 px-4 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="repDebtorsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs text-slate-500">
+        <span>CrediControl Cloud • Sistema Consolidado de Crédito por Marcas</span>
+        <button onclick="closeModalDirect('modalBrandReport')" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+          Cerrar Reporte
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: FICHA DEL CLIENTE / EXTRACTO DETALLADO (z-40)                      -->
+  <!-- ========================================================================= -->
+  <div id="modalClientHistory" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden modal-card">
+      
+      <!-- Encabezado del Cliente -->
+      <div class="p-5 border-b border-slate-200 bg-slate-50/90 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xl shadow">
+            <span id="detailClientAvatar">C</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 id="detailClientName" class="text-lg font-bold text-slate-900">Nombre del Cliente</h2>
+              <span id="detailClientBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold">Estado</span>
+              <button onclick="triggerEditClientFromHistory()" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition inline-flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-user-pen text-[11px]"></i> Editar Cliente
+              </button>
+            </div>
+            <p class="text-xs text-slate-500 flex items-center gap-3 mt-1 flex-wrap">
+              <span><i class="fa-regular fa-id-card text-slate-400"></i> <span id="detailClientDoc">Doc</span></span>
+              <span><i class="fa-solid fa-phone text-slate-400"></i> <span id="detailClientPhone">Tel</span></span>
+              <span id="detailClientLimitBadge" class="text-purple-700 font-semibold"></span>
+            </p>
+            <p id="detailClientAddressText" class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md"></p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <span class="text-xs uppercase font-bold text-slate-400">Deuda Consolidada</span>
+            <div id="detailClientBalance" class="text-2xl sm:text-3xl font-black text-rose-600">$0.00</div>
+          </div>
+          <button onclick="closeClientHistoryModal()" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-200 transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- DESGLOSE DE DEUDA DEL CLIENTE POR CADA MARCA (3 TARJETAS) -->
+      <div class="p-4 bg-slate-100/70 border-b border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-white p-3 rounded-xl border border-boutique-200 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1 text-xs font-bold text-boutique-700">
+              <i class="fa-solid fa-person-dress"></i> EPI Boutique
+            </div>
+            <div id="detailDebtBoutique" class="text-lg font-black text-boutique-800">$0.00</div>
+          </div>
+          <button onclick="triggerQuickBrandPayment('EPI Boutique')" id="btnAbonarBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-boutique-50 text-boutique-700 hover:bg-boutique-600 hover:text-white border border-boutique-200 transition">
+            Abonar
+          </button>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-exclusive-200 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1 text-xs font-bold text-exclusive-700">
+              <i class="fa-solid fa-crown"></i> Exclusive
+            </div>
+            <div id="detailDebtExclusive" class="text-lg font-black text-exclusive-800">$0.00</div>
+          </div>
+          <button onclick="triggerQuickBrandPayment('Exclusive')" id="btnAbonarExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-exclusive-50 text-exclusive-700 hover:bg-exclusive-600 hover:text-white border border-exclusive-200 transition">
+            Abonar
+          </button>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-beauty-200 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1 text-xs font-bold text-beauty-700">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Beauty
+            </div>
+            <div id="detailDebtBeauty" class="text-lg font-black text-beauty-800">$0.00</div>
+          </div>
+          <button onclick="triggerQuickBrandPayment('Beauty')" id="btnAbonarBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-beauty-50 text-beauty-700 hover:bg-beauty-600 hover:text-white border border-beauty-200 transition">
+            Abonar
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Acciones del Historial -->
+      <div class="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-sm">
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <button onclick="setHistoryFilter('all')" id="btnFilterAll" class="px-3 py-1 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800">Todos</button>
+          <button onclick="setHistoryFilter('sales')" id="btnFilterSales" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Compras (+)</button>
+          <button onclick="setHistoryFilter('payments')" id="btnFilterPayments" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Abonos (-)</button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="triggerSaleFromHistory()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm transition">
+            <i class="fa-solid fa-cart-plus"></i> + Registrar Compra
+          </button>
+          <button onclick="triggerPaymentFromHistory()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-fintech-600 text-white hover:bg-fintech-700 shadow-sm transition">
+            <i class="fa-solid fa-hand-holding-dollar"></i> + Abonar a Cuenta
+          </button>
+          <button onclick="sendWhatsAppSummary()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition">
+            <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+          </button>
+          <button onclick="printAccountStatement()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition shadow-sm">
+            <i class="fa-solid fa-print"></i> Imprimir Estado
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla de Extracto Cronológico -->
+      <div class="flex-1 overflow-y-auto p-5">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="text-xs uppercase font-semibold text-slate-400 border-b border-slate-200 pb-2">
+              <th class="py-2.5 px-3">Fecha</th>
+              <th class="py-2.5 px-3">Marca</th>
+              <th class="py-2.5 px-3">Detalle / Concepto</th>
+              <th class="py-2.5 px-3">Medio de Pago / Ref</th>
+              <th class="py-2.5 px-3 text-right">Monto USD</th>
+              <th class="py-2.5 px-3 text-right">Saldo de la Marca</th>
+              <th class="py-2.5 px-3 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+        <div id="noHistoryMessage" class="hidden py-12 text-center text-slate-400 text-sm">
+          No hay movimientos registrados para este cliente.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REGISTRAR COMPRA A CRÉDITO (z-[60])                                -->
+  <!-- ========================================================================= -->
+  <div id="modalSale" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform modal-card border border-purple-200">
+      <div class="px-6 py-4 border-b border-purple-100 bg-purple-50/70 flex items-center justify-between">
+        <h3 class="text-base font-bold text-purple-950 flex items-center gap-2">
+          <i class="fa-solid fa-cart-shopping text-purple-600"></i> Registrar Compra a Crédito
+        </h3>
+        <button onclick="dismissActionModal('modalSale')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="saleForm" onsubmit="handleSaveSale(event)" class="p-6 space-y-4">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca que otorga el crédito *</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="saleBrand" value="EPI Boutique" checked class="brand-radio-input sr-only">
+              <div class="brand-btn-boutique border border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-boutique-50 transition">
+                <div class="text-xl mb-1"><i class="fa-solid fa-person-dress"></i></div>
+                <div class="font-extrabold text-xs">EPI Boutique</div>
+                <div class="text-[10px] opacity-75">Moda & Vestidos</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="saleBrand" value="Exclusive" class="brand-radio-input sr-only">
+              <div class="brand-btn-exclusive border border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-exclusive-50 transition">
+                <div class="text-lg mb-1"><i class="fa-solid fa-crown"></i></div>
+                <div class="font-extrabold text-xs">Exclusive</div>
+                <div class="text-[10px] opacity-75">Calzado & Lujo</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="saleBrand" value="Beauty" class="brand-radio-input sr-only">
+              <div class="brand-btn-beauty border border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-beauty-50 transition">
+                <div class="text-lg mb-1"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="font-extrabold text-xs">Beauty</div>
+                <div class="text-[10px] opacity-75">Cosmética & Spa</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cliente *</label>
+          <select id="saleClientId" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
+            <input type="date" id="saleDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
+            <input type="number" step="0.01" min="0.01" id="saleAmount" required placeholder="0.00" 
+              class="w-full px-3 py-2 text-sm font-bold text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Artículos / Concepto de Compra *</label>
+          <input type="text" id="saleConcept" required placeholder="Ej. Vestido de Fiesta, Calzado de Cuero..." 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observaciones / Notas (Opcional)</label>
+          <input type="text" id="saleNotes" placeholder="Plazo de pago, cuotas o referencia..." 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="dismissActionModal('modalSale')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition shadow-sm">Guardar Compra</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REGISTRAR ABONO (z-[60])                                           -->
+  <!-- ========================================================================= -->
+  <div id="modalPayment" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform modal-card border border-emerald-200">
+      <div class="px-6 py-4 border-b border-emerald-100 bg-emerald-50/80 flex items-center justify-between">
+        <h3 class="text-base font-bold text-emerald-900 flex items-center gap-2">
+          <i class="fa-solid fa-hand-holding-dollar text-fintech-600"></i> Registrar Abono a Cuenta
+        </h3>
+        <button onclick="dismissActionModal('modalPayment')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="paymentForm" onsubmit="handleSavePayment(event)" class="p-6 space-y-4">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cliente *</label>
+          <select id="paymentClientId" onchange="onPaymentClientOrBrandChanged()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca a la que se abona *</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="paymentBrand" value="EPI Boutique" checked onchange="onPaymentClientOrBrandChanged()" class="brand-radio-input sr-only">
+              <div class="brand-btn-boutique border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-boutique-50 transition">
+                <div class="text-lg mb-0.5"><i class="fa-solid fa-person-dress"></i></div>
+                <div class="font-extrabold text-xs">EPI Boutique</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="paymentBrand" value="Exclusive" onchange="onPaymentClientOrBrandChanged()" class="brand-radio-input sr-only">
+              <div class="brand-btn-exclusive border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-exclusive-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-crown"></i></div>
+                <div class="font-extrabold text-xs">Exclusive</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="paymentBrand" value="Beauty" onchange="onPaymentClientOrBrandChanged()" class="brand-radio-input sr-only">
+              <div class="brand-btn-beauty border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-beauty-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="font-extrabold text-xs">Beauty</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div id="paymentBrandDebtPanel" class="p-3.5 rounded-xl border transition-all duration-200 bg-slate-50 border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase text-slate-500">Deuda en <span id="paymentSelectedBrandName">EPI Boutique</span>:</span>
+            <span id="paymentSelectedBrandDebtAmount" class="text-base font-black text-rose-600">$0.00 USD</span>
+          </div>
+
+          <div id="otherBrandsSuggestionsBox" class="hidden pt-2 border-t border-slate-200/80">
+            <p class="text-[11px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
+              <i class="fa-solid fa-arrow-turn-down text-indigo-500"></i> ¿Deseas abonar a otra marca con saldo pendiente?
+            </p>
+            <div id="otherBrandsButtonsList" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
+            <input type="date" id="paymentDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto a Abonar ($ USD) *</label>
+            <input type="number" step="0.01" min="0.01" id="paymentAmountUSD" required placeholder="0.00" oninput="validatePaymentAmountStrictly()"
+              class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+        </div>
+
+        <div id="paymentAmountErrorBox" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold flex items-center gap-2">
+          <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+          <span id="paymentAmountErrorText">El monto excede la deuda de la marca.</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Método de Pago *</label>
+          <select id="paymentMethod" onchange="toggleBsFields()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <option value="Efectivo ($ USD)">💵 Efectivo ($ USD)</option>
+            <option value="Zelle">🇺🇸 Zelle (Titular / Correo)</option>
+            <option value="Bolívares (Bs.)">🇻🇪 Bolívares (Pago Móvil / Transf.)</option>
+            <option value="USDT (Binance)">🪙 USDT (Binance Pay / Hash)</option>
+            <option value="Otro">💳 Tarjeta / Otro</option>
+          </select>
+        </div>
+
+        <div id="bsDetailsBox" class="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl space-y-2 hidden">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 uppercase">Tasa de Cambio (Bs./$)</label>
+              <input type="number" step="0.01" id="paymentRate" placeholder="Ej. 42.50" oninput="calculateBsEquivalent()" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 uppercase">Total en Bolívares</label>
+              <input type="text" id="paymentBsTotal" placeholder="0.00 Bs." readonly class="w-full px-2.5 py-1.5 text-xs bg-slate-100 rounded-lg border border-slate-200 font-bold text-slate-800">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nº Comprobante / Ref</label>
+            <input type="text" id="paymentRef" placeholder="Ej. Zelle #4590 / Ref 1234" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nota Adicional</label>
+            <input type="text" id="paymentNotes" placeholder="Titular, cajero o detalle..." 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="dismissActionModal('modalPayment')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="submit" id="btnSubmitPayment" class="px-5 py-2 text-sm font-bold text-white bg-fintech-600 hover:bg-fintech-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition shadow-sm">
+            Procesar Abono
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REGISTRAR CLIENTE (z-[60])                                         -->
+  <!-- ========================================================================= -->
+  <div id="modalClient" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform modal-card">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-indigo-600"></i> Registrar Nuevo Cliente
+        </h3>
+        <button onclick="dismissActionModal('modalClient')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="clientForm" onsubmit="handleSaveClient(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre Completo *</label>
+          <input type="text" id="clientName" required placeholder="Ej. Carlos Mendoza" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cédula / DNI / RIF *</label>
+            <input type="text" id="clientDoc" required placeholder="V-18456789" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teléfono / WhatsApp *</label>
+            <input type="tel" id="clientPhone" required placeholder="+58 412 1234567" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Límite de Crédito ($ USD - Opcional)</label>
+          <input type="number" step="0.01" min="0" id="clientCreditLimit" placeholder="Ej. 200.00" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Dirección / Sector</label>
+          <textarea id="clientAddress" rows="2" placeholder="Sector, calle, casa o notas..." 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="dismissActionModal('modalClient')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">Guardar Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDITAR CLIENTE (z-[60])                                            -->
+  <!-- ========================================================================= -->
+  <div id="modalEditClient" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform modal-card">
+      <div class="px-6 py-4 border-b border-indigo-100 bg-indigo-50/60 flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-user-pen text-indigo-600 text-lg"></i> Editar Datos del Cliente
+        </h3>
+        <button onclick="dismissActionModal('modalEditClient')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="editClientForm" onsubmit="handleUpdateClient(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editClientId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre y Apellido *</label>
+          <input type="text" id="editClientName" required placeholder="Nombre completo" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cédula / DNI / RIF *</label>
+            <input type="text" id="editClientDoc" required placeholder="Documento" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teléfono / WhatsApp *</label>
+            <input type="tel" id="editClientPhone" required placeholder="Número telefónico" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Límite de Crédito ($ USD)</label>
+          <input type="number" step="0.01" min="0" id="editClientCreditLimit" placeholder="Ej. 250.00" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Dirección / Ubicación</label>
+          <input type="text" id="editClientAddress" placeholder="Dirección completa o sector" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button type="button" onclick="confirmDeleteClient(document.getElementById('editClientId').value)" class="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition inline-flex items-center gap-1.5">
+            <i class="fa-regular fa-trash-can"></i> Eliminar Cliente
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="dismissActionModal('modalEditClient')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+            <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">Guardar Cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDITAR COMPRA (z-[60])                                             -->
+  <!-- ========================================================================= -->
+  <div id="modalEditSale" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform modal-card border border-purple-200">
+      <div class="px-6 py-4 border-b border-purple-100 bg-purple-50/70 flex items-center justify-between">
+        <h3 class="text-base font-bold text-purple-950 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-purple-600"></i> Editar Compra a Crédito
+        </h3>
+        <button onclick="dismissActionModal('modalEditSale')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="editSaleForm" onsubmit="handleUpdateSale(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editSaleTxId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca *</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editSaleBrand" value="EPI Boutique" id="editBrandBoutique" class="brand-radio-input sr-only">
+              <div class="brand-btn-boutique border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-boutique-50 transition">
+                <div class="text-lg mb-0.5"><i class="fa-solid fa-person-dress"></i></div>
+                <div class="font-extrabold text-xs">EPI Boutique</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editSaleBrand" value="Exclusive" id="editBrandExclusive" class="brand-radio-input sr-only">
+              <div class="brand-btn-exclusive border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-exclusive-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-crown"></i></div>
+                <div class="font-extrabold text-xs">Exclusive</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editSaleBrand" value="Beauty" id="editBrandBeauty" class="brand-radio-input sr-only">
+              <div class="brand-btn-beauty border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-beauty-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="font-extrabold text-xs">Beauty</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
+            <input type="date" id="editSaleDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
+            <input type="number" step="0.01" min="0.01" id="editSaleAmount" required placeholder="0.00" 
+              class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Artículos / Concepto *</label>
+          <input type="text" id="editSaleConcept" required placeholder="Descripción de artículos..." 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observaciones / Notas</label>
+          <input type="text" id="editSaleNotes" placeholder="Plazos, garantía, etc." 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="dismissActionModal('modalEditSale')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition shadow-sm">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDITAR ABONO (z-[60])                                              -->
+  <!-- ========================================================================= -->
+  <div id="modalEditPayment" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform modal-card border border-emerald-200">
+      <div class="px-6 py-4 border-b border-emerald-100 bg-emerald-50/70 flex items-center justify-between">
+        <h3 class="text-base font-bold text-emerald-900 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-fintech-600"></i> Modificar Abono
+        </h3>
+        <button onclick="dismissActionModal('modalEditPayment')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="editPaymentForm" onsubmit="handleUpdatePayment(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editPaymentTxId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca del Abono *</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editPaymentBrand" value="EPI Boutique" id="editPayBrandBoutique" class="brand-radio-input sr-only">
+              <div class="brand-btn-boutique border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-boutique-50 transition">
+                <div class="text-lg mb-0.5"><i class="fa-solid fa-person-dress"></i></div>
+                <div class="font-extrabold text-xs">EPI Boutique</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editPaymentBrand" value="Exclusive" id="editPayBrandExclusive" class="brand-radio-input sr-only">
+              <div class="brand-btn-exclusive border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-exclusive-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-crown"></i></div>
+                <div class="font-extrabold text-xs">Exclusive</div>
+              </div>
+            </label>
+            <label class="brand-radio-label relative block">
+              <input type="radio" name="editPaymentBrand" value="Beauty" id="editPayBrandBeauty" class="brand-radio-input sr-only">
+              <div class="brand-btn-beauty border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-beauty-50 transition">
+                <div class="text-base mb-0.5"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="font-extrabold text-xs">Beauty</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
+            <input type="date" id="editPaymentDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
+            <input type="number" step="0.01" min="0.01" id="editPaymentAmountUSD" required placeholder="0.00" 
+              class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Método de Pago *</label>
+          <select id="editPaymentMethod" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <option value="Efectivo ($ USD)">💵 Efectivo ($ USD)</option>
+            <option value="Zelle">🇺🇸 Zelle</option>
+            <option value="Bolívares (Bs.)">🇻🇪 Bolívares (Pago Móvil / Transf.)</option>
+            <option value="USDT (Binance)">🪙 USDT (Binance Pay / Hash)</option>
+            <option value="Otro">💳 Tarjeta / Otro</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nº Comprobante / Ref</label>
+            <input type="text" id="editPaymentRef" placeholder="Ej. Ref 123456" 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nota Adicional</label>
+            <input type="text" id="editPaymentNotes" placeholder="Detalle o tasa..." 
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="dismissActionModal('modalEditPayment')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-fintech-600 hover:bg-fintech-700 rounded-xl transition shadow-sm">Actualizar Abono</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CONFIRMACIÓN DE ELIMINACIÓN (z-[70])                               -->
+  <!-- ========================================================================= -->
+  <div id="modalConfirmDelete" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center space-y-4 modal-card">
+      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h4 class="font-bold text-slate-900 text-base" id="deleteModalTitle">¿Confirmar eliminación?</h4>
+        <p class="text-xs text-slate-500 mt-1" id="deleteModalDesc">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="dismissActionModal('modalConfirmDelete')" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Cancelar</button>
+        <button id="btnConfirmDeleteAction" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow transition">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RECIBO / COMPROBANTE DE ABONO (z-[65])                             -->
+  <!-- ========================================================================= -->
+  <div id="modalReceipt" class="fixed inset-0 z-[65] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-4 modal-card">
+      <div id="receiptContent" class="space-y-4 text-center"></div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="dismissReceiptModal()" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Volver</button>
+        <button id="btnPrintReceiptModal" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-fintech-600 hover:bg-fintech-700 text-white shadow flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-print"></i> Imprimir Recibo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: AJUSTES GOOGLE SHEETS / NUBE (z-50)                                -->
+  <!-- ========================================================================= -->
+  <div id="modalSheets" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden modal-card">
+      <div class="p-5 border-b border-slate-200 bg-emerald-50/70 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-fintech-600 text-white flex items-center justify-center font-bold text-lg shadow">
+            <i class="fa-solid fa-table"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Sincronización con Google Sheets</h3>
+            <p class="text-xs text-slate-500">Respaldo automático con saldos por Marca</p>
+          </div>
+        </div>
+        <button onclick="closeModalDirect('modalSheets')" class="text-slate-400 hover:text-slate-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 text-sm">
+        <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase">URL de Aplicación Web Google Apps Script:</label>
+            <span id="sheetsModalStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700">No Conectado</span>
+          </div>
+          <div class="flex gap-2">
+            <input type="url" id="sheetsWebAppUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <button onclick="saveSheetsUrl()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap">
+              Guardar URL
+            </button>
+          </div>
+          <div class="flex items-center gap-2 pt-1 flex-wrap">
+            <button onclick="testSheetsConnection()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium text-xs rounded-lg transition inline-flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-bolt text-amber-500"></i> Probar Conexión
+            </button>
+            <button onclick="triggerFullSync()" class="px-3.5 py-1.5 bg-fintech-600 hover:bg-fintech-700 text-white font-semibold text-xs rounded-lg transition inline-flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizar Todo Ahora
+            </button>
+            <button onclick="disconnectSheets()" class="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition ml-auto font-medium">
+              Desconectar
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-code text-indigo-600"></i>
+            Código de Google Apps Script:
+          </h4>
+          <div class="relative bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs overflow-x-auto shadow-inner">
+            <button onclick="copyAppsScriptCode()" id="btnCopyScript" class="absolute top-2.5 right-2.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-sans font-semibold transition flex items-center gap-1.5">
+              <i class="fa-regular fa-copy"></i> Copiar Código
+            </button>
+            <pre id="appsScriptCodeBlock" class="pr-24"><code>function doPost(e) {
+  try {
+    var raw = e.postData.contents;
+    var data = JSON.parse(raw);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // 1. CLIENTES_Y_SALDOS_POR_MARCA
+    var sheetClientes = getOrCreateSheet(ss, "CLIENTES_SALDOS_MARCAS");
+    sheetClientes.clear();
+    sheetClientes.appendRow([
+      "ID", "Cédula/RIF", "Nombre", "Teléfono", "Dirección",
+      "Deuda Boutique ($)", "Deuda Exclusive ($)", "Deuda Beauty ($)",
+      "Total Compras ($)", "Total Abonado ($)", "Saldo Deudor Total ($)", "Estado"
+    ]);
+    
+    (data.clients || []).forEach(function(c) {
+      sheetClientes.appendRow([
+        c.id, c.doc, c.name, c.phone, c.address || '',
+        c.debtBoutique || 0, c.debtExclusive || 0, c.debtBeauty || 0,
+        c.totalPurchases, c.totalPaid, c.totalBalance,
+        (c.totalBalance > 0 ? "DEUDOR" : "AL DÍA")
+      ]);
+    });
+
+    // 2. HISTORIAL_COMPRAS
+    var sheetCompras = getOrCreateSheet(ss, "HISTORIAL_COMPRAS");
+    sheetCompras.clear();
+    sheetCompras.appendRow(["Fecha", "Marca", "Cliente", "Cédula", "Artículos", "Monto USD", "Notas"]);
+    (data.purchases || []).forEach(function(p) {
+      sheetCompras.appendRow([p.date, p.brand, p.clientName, p.clientDoc, p.concept, p.amount, p.notes]);
+    });
+
+    // 3. HISTORIAL_ABONOS
+    var sheetAbonos = getOrCreateSheet(ss, "HISTORIAL_ABONOS");
+    sheetAbonos.clear();
+    sheetAbonos.appendRow(["Fecha", "Marca Abonada", "Cliente", "Cédula", "Método", "Referencia", "Monto USD", "Notas"]);
+    (data.payments || []).forEach(function(a) {
+      sheetAbonos.appendRow([a.date, a.brand, a.clientName, a.clientDoc, a.method, a.ref, a.amount, a.notes]);
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Respaldo actualizado correctamente en Google Sheets",
+      updatedAt: new Date().toLocaleString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getOrCreateSheet(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+  }
+  return sheet;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+        <button onclick="closeModalDirect('modalSheets')" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IFRAME OCULTO AISLADO PARA IMPRESIÓN LIMPIA -->
+  <iframe id="cleanPrintIframe" class="hidden"></iframe>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: LÓGICA GENERAL, REPORTES POR MARCA & SEGURIDAD               -->
+  <!-- ========================================================================= -->
+  <script>
+    // CREDENCIALES FIJAS
+    const VALID_USER = "epiabonos";
+    const VALID_PASS = "abonos1234#";
+    const AUTH_SESSION_KEY = "credicontrol_session_active_v1";
+
+    // FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyATMDVPl_wT71JijcWA1oAdYkOs9_eyBOY",
+      authDomain: "credicontrol-tienda.firebaseapp.com",
+      projectId: "credicontrol-tienda",
+      storageBucket: "credicontrol-tienda.firebasestorage.app",
+      messagingSenderId: "946287073799",
+      appId: "1:946287073799:web:992f3dec57e97be336e8a2"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      console.log("Firebase Firestore Inicializado");
+    } catch (e) {
+      console.error("Error al inicializar Firebase:", e);
+    }
+
+    const STORAGE_KEY = 'credicontrol_data_brand_strict_v2';
+    const SHEETS_URL_KEY = 'credicontrol_sheets_url';
+    const LAST_SYNC_KEY = 'credicontrol_last_sync_time';
+
+    const BRANDS = ["EPI Boutique", "Exclusive", "Beauty"];
+
+    let appData = {
+      clients: [],
+      transactions: []
+    };
+
+    let sheetsWebAppUrl = '';
+    let isSyncing = false;
+    let currentClientIdForDetail = null;
+    let currentHistoryFilter = 'all';
+    let returnToHistoryOnClose = false;
+
+    // Estado del Módulo de Reportes
+    let currentReportPeriod = 'all';
+    let reportCustomStart = '';
+    let reportCustomEnd = '';
+    let currentDebtorRankingBrand = 'ALL';
+
+    // INICIALIZACIÓN
+    window.onload = function() {
+      initAppLifecycle();
+    };
+
+    function initAppLifecycle() {
+      const isLogged = sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
+      if (!isLogged) {
+        showLoginScreen();
+      } else {
+        showAppScreen();
+      }
+    }
+
+    function showLoginScreen() {
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginScreen').classList.add('flex');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('flex');
+      const uField = document.getElementById('loginUsername');
+      if (uField) {
+        uField.value = '';
+        setTimeout(() => uField.focus(), 150);
+      }
+      const pField = document.getElementById('loginPassword');
+      if (pField) pField.value = '';
+    }
+
+    function showAppScreen() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('flex');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('flex');
+
+      loadData();
+      loadSheetsConfig();
+      setDefaultDates();
+      startCloudSync();
+      updateSyncBanner();
+    }
+
+    function handleLoginSubmit(e) {
+      if (e) e.preventDefault();
+      const user = document.getElementById('loginUsername').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const errorBox = document.getElementById('loginErrorMsg');
+      const card = document.getElementById('loginCard');
+
+      if (user === VALID_USER && pass === VALID_PASS) {
+        errorBox.classList.add('hidden');
+        sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+        showToast('¡Acceso concedido! Bienvenido a CrediControl.', 'success');
+        showAppScreen();
+      } else {
+        errorBox.classList.remove('hidden');
+        card.classList.remove('shake-anim');
+        void card.offsetWidth;
+        card.classList.add('shake-anim');
+        const passField = document.getElementById('loginPassword');
+        if (passField) {
+          passField.value = '';
+          passField.focus();
+        }
+      }
+    }
+
+    function logoutSession() {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      location.reload();
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('loginPassword');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash text-sm text-indigo-400';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye text-sm text-slate-400';
+      }
+    }
+
+    // SINCRONIZACIÓN EN TIEMPO REAL CON FIREBASE
+    function startCloudSync() {
+      if (!db) {
+        refreshDashboard();
+        return;
+      }
+
+      db.collection("clients").onSnapshot((snapshot) => {
+        appData.clients = [];
+        snapshot.forEach(doc => appData.clients.push({ id: doc.id, ...doc.data() }));
+        saveData(false);
+        refreshDashboard();
+      }, (err) => {
+        console.error("Error al escuchar clientes en Firebase:", err);
+      });
+
+      db.collection("transactions").onSnapshot((snapshot) => {
+        appData.transactions = [];
+        snapshot.forEach(doc => appData.transactions.push({ id: doc.id, ...doc.data() }));
+        saveData(false);
+        refreshDashboard();
+      }, (err) => {
+        console.error("Error al escuchar transacciones en Firebase:", err);
+      });
+    }
+
+    function loadData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          appData = JSON.parse(stored);
+        } catch(e) {
+          appData = { clients: [], transactions: [] };
+        }
+      }
+    }
+
+    function saveData(triggerCloud = true) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      if (triggerCloud && sheetsWebAppUrl) {
+        syncToGoogleSheetsInBackground();
+      }
+    }
+
+    function setDefaultDates() {
+      const today = new Date().toISOString().split('T')[0];
+      const sDate = document.getElementById('saleDate');
+      const pDate = document.getElementById('paymentDate');
+      if (sDate) sDate.value = today;
+      if (pDate) pDate.value = today;
+    }
+
+    // CÁLCULOS MATEMÁTICOS DE SALDO POR MARCA
+    function getClientBrandMetrics(clientId) {
+      const clientTxs = appData.transactions.filter(t => t.clientId === clientId);
+      
+      const brandsData = {
+        'EPI Boutique': { purchases: 0, paid: 0, balance: 0 },
+        'Exclusive': { purchases: 0, paid: 0, balance: 0 },
+        'Beauty': { purchases: 0, paid: 0, balance: 0 }
+      };
+
+      let totalPurchases = 0;
+      let totalPaid = 0;
+
+      clientTxs.forEach(t => {
+        const brand = t.brand || 'EPI Boutique';
+        const amount = parseFloat(t.amount || 0);
+        if (!brandsData[brand]) {
+          brandsData[brand] = { purchases: 0, paid: 0, balance: 0 };
+        }
+
+        if (t.type === 'SALE') {
+          brandsData[brand].purchases += amount;
+          totalPurchases += amount;
+        } else if (t.type === 'PAYMENT') {
+          brandsData[brand].paid += amount;
+          totalPaid += amount;
+        }
+      });
+
+      for (const b in brandsData) {
+        const bal = brandsData[b].purchases - brandsData[b].paid;
+        brandsData[b].balance = Number(Math.max(0, bal).toFixed(2));
+      }
+
+      const totalBalance = Number(Math.max(0, totalPurchases - totalPaid).toFixed(2));
+
+      return {
+        brands: brandsData,
+        debtBoutique: brandsData['EPI Boutique'].balance,
+        debtExclusive: brandsData['Exclusive'].balance,
+        debtBeauty: brandsData['Beauty'].balance,
+        totalPurchases: Number(totalPurchases.toFixed(2)),
+        totalPaid: Number(totalPaid.toFixed(2)),
+        totalBalance: totalBalance
+      };
+    }
+
+    function getGlobalMetrics() {
+      let totalDebt = 0;
+      let debtBoutique = 0;
+      let debtExclusive = 0;
+      let debtBeauty = 0;
+      let totalPaid = 0;
+      let debtorsCount = 0;
+
+      appData.clients.forEach(c => {
+        const m = getClientBrandMetrics(c.id);
+        if (m.totalBalance > 0.009) {
+          debtorsCount++;
+        }
+        totalDebt += m.totalBalance;
+        debtBoutique += m.debtBoutique;
+        debtExclusive += m.debtExclusive;
+        debtBeauty += m.debtBeauty;
+        totalPaid += m.totalPaid;
+      });
+
+      return {
+        totalDebt: totalDebt.toFixed(2),
+        debtBoutique: debtBoutique.toFixed(2),
+        debtExclusive: debtExclusive.toFixed(2),
+        debtBeauty: debtBeauty.toFixed(2),
+        totalPaid: totalPaid.toFixed(2),
+        debtorsCount,
+        totalClients: appData.clients.length
+      };
+    }
+
+    function refreshDashboard() {
+      const g = getGlobalMetrics();
+      document.getElementById('statTotalDebt').innerText = `$${formatCurrency(g.totalDebt)}`;
+      document.getElementById('statDebtBoutique').innerText = `$${formatCurrency(g.debtBoutique)}`;
+      document.getElementById('statDebtExclusive').innerText = `$${formatCurrency(g.debtExclusive)}`;
+      document.getElementById('statDebtBeauty').innerText = `$${formatCurrency(g.debtBeauty)}`;
+      document.getElementById('statTotalPaid').innerText = `$${formatCurrency(g.totalPaid)}`;
+      document.getElementById('statDebtorCount').innerText = g.debtorsCount;
+      document.getElementById('statTotalClients').innerText = g.totalClients;
+
+      populateClientSelects();
+      renderClientsTable();
+      if (currentClientIdForDetail) {
+        showClientHistory(currentClientIdForDetail);
+      }
+    }
+
+    function populateClientSelects() {
+      const saleSelect = document.getElementById('saleClientId');
+      const paySelect = document.getElementById('paymentClientId');
+
+      const clientsSorted = [...appData.clients].sort((a, b) => a.name.localeCompare(b.name));
+
+      let saleOptions = '<option value="">-- Selecciona un cliente --</option>';
+      let payOptions = '<option value="">-- Selecciona un cliente --</option>';
+
+      clientsSorted.forEach(c => {
+        const m = getClientBrandMetrics(c.id);
+        const debtBadge = m.totalBalance > 0 ? `(Debe: $${formatCurrency(m.totalBalance)})` : '(Solvente)';
+        saleOptions += `<option value="${c.id}">${c.name} - ${c.doc}</option>`;
+        payOptions += `<option value="${c.id}">${c.name} ${debtBadge}</option>`;
+      });
+
+      if (saleSelect) saleSelect.innerHTML = saleOptions;
+      if (paySelect) paySelect.innerHTML = payOptions;
+    }
+
+    function renderClientsTable() {
+      const tbody = document.getElementById('clientsTableBody');
+      const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filter = document.getElementById('filterStatus').value;
+      const noData = document.getElementById('noDataMessage');
+
+      tbody.innerHTML = '';
+
+      const filtered = appData.clients.filter(client => {
+        const m = getClientBrandMetrics(client.id);
+        const matchesSearch = client.name.toLowerCase().includes(search) || 
+                              client.doc.toLowerCase().includes(search) || 
+                              client.phone.toLowerCase().includes(search);
+
+        if (!matchesSearch) return false;
+        if (filter === 'debt') return m.totalBalance > 0.009;
+        if (filter === 'paid') return m.totalBalance <= 0.009;
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        const bA = getClientBrandMetrics(a.id).totalBalance;
+        const bB = getClientBrandMetrics(b.id).totalBalance;
+        return bB - bA;
+      });
+
+      if (filtered.length === 0) {
+        noData.classList.remove('hidden');
+        return;
+      } else {
+        noData.classList.add('hidden');
+      }
+
+      filtered.forEach(client => {
+        const m = getClientBrandMetrics(client.id);
+        const hasDebt = m.totalBalance > 0.009;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 group";
+
+        let brandChips = '<div class="flex flex-wrap gap-1 items-center">';
+        if (m.debtBoutique > 0) {
+          brandChips += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-boutique-100 text-boutique-800 border border-boutique-200" title="Deuda en EPI Boutique">
+            <i class="fa-solid fa-person-dress text-xs"></i> $${formatCurrency(m.debtBoutique)}
+          </span>`;
+        }
+        if (m.debtExclusive > 0) {
+          brandChips += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-exclusive-100 text-exclusive-800 border border-exclusive-200" title="Deuda en Exclusive">
+            <i class="fa-solid fa-crown text-[10px]"></i> $${formatCurrency(m.debtExclusive)}
+          </span>`;
+        }
+        if (m.debtBeauty > 0) {
+          brandChips += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-beauty-100 text-beauty-800 border border-beauty-200" title="Deuda en Beauty">
+            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> $${formatCurrency(m.debtBeauty)}
+          </span>`;
+        }
+        if (!hasDebt) {
+          brandChips += `<span class="text-xs text-slate-400 italic">Sin deudas</span>`;
+        }
+        brandChips += '</div>';
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 sm:px-6 cursor-pointer" onclick="showClientHistory('${client.id}')">
+            <div class="font-bold text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1.5">
+              ${client.name}
+            </div>
+            <div class="text-xs text-slate-400">CI / RIF: ${client.doc} • Tel: ${client.phone}</div>
+          </td>
+          <td class="py-3 px-4 cursor-pointer" onclick="showClientHistory('${client.id}')">
+            ${brandChips}
+          </td>
+          <td class="py-3 px-4 text-right font-medium text-slate-600 cursor-pointer" onclick="showClientHistory('${client.id}')">
+            $${formatCurrency(m.totalPurchases)}
+          </td>
+          <td class="py-3 px-4 text-right font-medium text-emerald-600 cursor-pointer" onclick="showClientHistory('${client.id}')">
+            $${formatCurrency(m.totalPaid)}
+          </td>
+          <td class="py-3 px-4 text-right font-black cursor-pointer ${hasDebt ? 'text-rose-600 text-base' : 'text-slate-400'}" onclick="showClientHistory('${client.id}')">
+            $${formatCurrency(m.totalBalance)}
+          </td>
+          <td class="py-3 px-4 text-center cursor-pointer" onclick="showClientHistory('${client.id}')">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${hasDebt ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+              ${hasDebt ? 'Con Deuda' : 'Al Día'}
+            </span>
+          </td>
+          <td class="py-3 px-4 sm:px-6 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button onclick="showClientHistory('${client.id}')" title="Ver Historial" class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button onclick="openEditClientDirect('${client.id}')" title="Editar Cliente" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 transition">
+                <i class="fa-solid fa-user-pen"></i>
+              </button>
+              <button onclick="quickAddSale('${client.id}')" title="Nueva Compra" class="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 transition">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+              <button onclick="quickAddPayment('${client.id}')" title="Registrar Abono" class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // VALIDACIÓN ESTRICTA DE ABONOS
+    function onPaymentClientOrBrandChanged() {
+      const clientId = document.getElementById('paymentClientId').value;
+      const brandRadio = document.querySelector('input[name="paymentBrand"]:checked');
+      const brand = brandRadio ? brandRadio.value : 'EPI Boutique';
+
+      const brandNameLabel = document.getElementById('paymentSelectedBrandName');
+      const debtAmountLabel = document.getElementById('paymentSelectedBrandDebtAmount');
+      const suggestionsBox = document.getElementById('otherBrandsSuggestionsBox');
+      const suggestionsList = document.getElementById('otherBrandsButtonsList');
+      const errorBox = document.getElementById('paymentAmountErrorBox');
+      const btnSubmit = document.getElementById('btnSubmitPayment');
+
+      brandNameLabel.innerText = brand;
+      suggestionsBox.classList.add('hidden');
+      suggestionsList.innerHTML = '';
+      errorBox.classList.add('hidden');
+
+      if (!clientId) {
+        debtAmountLabel.innerText = "$0.00 USD";
+        btnSubmit.disabled = false;
+        return;
+      }
+
+      const metrics = getClientBrandMetrics(clientId);
+      const currentBrandDebt = metrics.brands[brand] ? metrics.brands[brand].balance : 0;
+
+      debtAmountLabel.innerText = `$${formatCurrency(currentBrandDebt)} USD`;
+
+      const otherBrandsWithDebt = BRANDS.filter(b => b !== brand && metrics.brands[b] && metrics.brands[b].balance > 0);
+
+      if (otherBrandsWithDebt.length > 0) {
+        suggestionsBox.classList.remove('hidden');
+        otherBrandsWithDebt.forEach(b => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          let btnClass = "px-2.5 py-1 text-xs font-bold rounded-lg border transition flex items-center gap-1 ";
+          if (b === 'EPI Boutique') {
+            btnClass += "bg-boutique-50 text-boutique-700 border-boutique-300 hover:bg-boutique-100";
+            btn.innerHTML = `<i class="fa-solid fa-person-dress"></i> Boutique ($${formatCurrency(metrics.brands[b].balance)})`;
+          } else if (b === 'Exclusive') {
+            btnClass += "bg-exclusive-50 text-exclusive-700 border-exclusive-300 hover:bg-exclusive-100";
+            btn.innerHTML = `<i class="fa-solid fa-crown"></i> Exclusive ($${formatCurrency(metrics.brands[b].balance)})`;
+          } else {
+            btnClass += "bg-beauty-50 text-beauty-700 border-beauty-300 hover:bg-beauty-100";
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Beauty ($${formatCurrency(metrics.brands[b].balance)})`;
+          }
+          btn.className = btnClass;
+          btn.onclick = () => switchPaymentBrand(b);
+          suggestionsList.appendChild(btn);
+        });
+      }
+
+      validatePaymentAmountStrictly();
+    }
+
+    function switchPaymentBrand(targetBrand) {
+      const radio = document.querySelector(`input[name="paymentBrand"][value="${targetBrand}"]`);
+      if (radio) {
+        radio.checked = true;
+        onPaymentClientOrBrandChanged();
+        const amtInput = document.getElementById('paymentAmountUSD');
+        amtInput.focus();
+      }
+    }
+
+    function validatePaymentAmountStrictly() {
+      const clientId = document.getElementById('paymentClientId').value;
+      const brandRadio = document.querySelector('input[name="paymentBrand"]:checked');
+      const brand = brandRadio ? brandRadio.value : 'EPI Boutique';
+      const amountInput = document.getElementById('paymentAmountUSD');
+      const amount = parseFloat(amountInput.value) || 0;
+
+      const errorBox = document.getElementById('paymentAmountErrorBox');
+      const errorText = document.getElementById('paymentAmountErrorText');
+      const btnSubmit = document.getElementById('btnSubmitPayment');
+
+      if (!clientId) {
+        btnSubmit.disabled = false;
+        errorBox.classList.add('hidden');
+        return true;
+      }
+
+      const metrics = getClientBrandMetrics(clientId);
+      const brandDebt = metrics.brands[brand] ? metrics.brands[brand].balance : 0;
+
+      if (brandDebt <= 0.009) {
+        errorBox.classList.remove('hidden');
+        errorText.innerText = `Este cliente no tiene deuda pendiente en ${brand} ($0.00). Elige otra marca con saldo deudor.`;
+        btnSubmit.disabled = true;
+        return false;
+      }
+
+      if (amount > brandDebt) {
+        errorBox.classList.remove('hidden');
+        errorText.innerText = `El abono ($${formatCurrency(amount)}) supera la deuda en ${brand} ($${formatCurrency(brandDebt)}). El monto máximo es $${formatCurrency(brandDebt)} USD.`;
+        btnSubmit.disabled = true;
+        return false;
+      }
+
+      errorBox.classList.add('hidden');
+      btnSubmit.disabled = false;
+      return true;
+    }
+
+    // MODULO REPORTES
+    function openBrandReportModal() {
+      currentReportPeriod = 'all';
+      updateReportPeriodButtons();
+      renderBrandReportData();
+      openModalDirect('modalBrandReport');
+    }
+
+    function setReportPeriod(period) {
+      currentReportPeriod = period;
+      document.getElementById('customDateRangeBox').classList.add('hidden');
+      updateReportPeriodButtons();
+      renderBrandReportData();
+    }
+
+    function toggleCustomRangeBox() {
+      currentReportPeriod = 'custom';
+      updateReportPeriodButtons();
+      const box = document.getElementById('customDateRangeBox');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('repStartDate').value = today;
+        document.getElementById('repEndDate').value = today;
+      }
+    }
+
+    function applyCustomDateRange() {
+      reportCustomStart = document.getElementById('repStartDate').value;
+      reportCustomEnd = document.getElementById('repEndDate').value;
+      if (!reportCustomStart || !reportCustomEnd) {
+        showToast('Selecciona ambas fechas para el rango', 'error');
+        return;
+      }
+      renderBrandReportData();
+    }
+
+    function updateReportPeriodButtons() {
+      const periods = ['all', 'today', 'week', 'month', 'custom'];
+      periods.forEach(p => {
+        const btn = document.getElementById(`repFilter${p.charAt(0).toUpperCase() + p.slice(1)}`);
+        if (btn) {
+          if (p === currentReportPeriod) {
+            btn.className = "px-3 py-1.5 font-bold rounded-xl bg-indigo-600 text-white shadow-sm";
+          } else {
+            btn.className = "px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100";
+          }
+        }
+      });
+    }
+
+    function getFilteredTransactionsForReport() {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      return appData.transactions.filter(t => {
+        if (!t.date) return false;
+        if (currentReportPeriod === 'all') return true;
+        if (currentReportPeriod === 'today') return t.date === todayStr;
+
+        if (currentReportPeriod === 'week') {
+          const tDate = new Date(t.date + 'T00:00:00');
+          const day = now.getDay() || 7;
+          const monday = new Date(now);
+          monday.setDate(now.getDate() - day + 1);
+          monday.setHours(0, 0, 0, 0);
+          return tDate >= monday;
+        }
+
+        if (currentReportPeriod === 'month') {
+          const tDate = new Date(t.date + 'T00:00:00');
+          return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
+        }
+
+        if (currentReportPeriod === 'custom') {
+          if (!reportCustomStart || !reportCustomEnd) return true;
+          return t.date >= reportCustomStart && t.date <= reportCustomEnd;
+        }
+
+        return true;
+      });
+    }
+
+    function renderBrandReportData() {
+      const periodLabel = document.getElementById('reportPeriodLabel');
+      if (currentReportPeriod === 'all') periodLabel.innerText = "Mostrando: Histórico Completo";
+      else if (currentReportPeriod === 'today') periodLabel.innerText = `Mostrando: Solo Hoy (${new Date().toLocaleDateString('es-ES')})`;
+      else if (currentReportPeriod === 'week') periodLabel.innerText = "Mostrando: Esta Semana";
+      else if (currentReportPeriod === 'month') periodLabel.innerText = "Mostrando: Este Mes";
+      else if (currentReportPeriod === 'custom') periodLabel.innerText = `Rango: ${formatDate(reportCustomStart)} al ${formatDate(reportCustomEnd)}`;
+
+      const filteredTxs = getFilteredTransactionsForReport();
+
+      const brandStats = {
+        'EPI Boutique': { sales: 0, paid: 0, debt: 0, methods: {} },
+        'Exclusive': { sales: 0, paid: 0, debt: 0, methods: {} },
+        'Beauty': { sales: 0, paid: 0, debt: 0, methods: {} }
+      };
+
+      const globalMethods = {};
+      let globalSales = 0;
+      let globalPaid = 0;
+
+      filteredTxs.forEach(t => {
+        const brand = t.brand || 'EPI Boutique';
+        const amt = parseFloat(t.amount || 0);
+        if (!brandStats[brand]) brandStats[brand] = { sales: 0, paid: 0, debt: 0, methods: {} };
+
+        if (t.type === 'SALE') {
+          brandStats[brand].sales += amt;
+          globalSales += amt;
+        } else if (t.type === 'PAYMENT') {
+          brandStats[brand].paid += amt;
+          globalPaid += amt;
+
+          const method = t.method || 'Efectivo ($ USD)';
+          brandStats[brand].methods[method] = (brandStats[brand].methods[method] || 0) + amt;
+          globalMethods[method] = (globalMethods[method] || 0) + amt;
+        }
+      });
+
+      let totalPortfolioDebt = 0;
+      let brandPortfolioDebt = { 'EPI Boutique': 0, 'Exclusive': 0, 'Beauty': 0 };
+
+      appData.clients.forEach(c => {
+        const m = getClientBrandMetrics(c.id);
+        brandPortfolioDebt['EPI Boutique'] += m.debtBoutique;
+        brandPortfolioDebt['Exclusive'] += m.debtExclusive;
+        brandPortfolioDebt['Beauty'] += m.debtBeauty;
+        totalPortfolioDebt += m.totalBalance;
+      });
+
+      document.getElementById('repGlobalSales').innerText = `$${formatCurrency(globalSales)}`;
+      document.getElementById('repGlobalPaid').innerText = `$${formatCurrency(globalPaid)}`;
+      document.getElementById('repGlobalDebt').innerText = `$${formatCurrency(totalPortfolioDebt)}`;
+
+      const recoveryRate = globalSales > 0 ? (globalPaid / globalSales) * 100 : (globalPaid > 0 ? 100 : 0);
+      const cappedRate = Math.min(100, recoveryRate).toFixed(1);
+      document.getElementById('repGlobalRate').innerText = `${recoveryRate.toFixed(1)}%`;
+      document.getElementById('repGlobalRateBar').style.width = `${cappedRate}%`;
+
+      const brandTbody = document.getElementById('repBrandTableBody');
+      brandTbody.innerHTML = '';
+
+      BRANDS.forEach(b => {
+        const s = brandStats[b].sales;
+        const p = brandStats[b].paid;
+        const d = brandPortfolioDebt[b];
+        const rate = s > 0 ? (p / s) * 100 : (p > 0 ? 100 : 0);
+        const rateClamped = Math.min(100, Math.max(0, rate));
+
+        let brandIcon = '';
+        let brandClass = '';
+        let barGrad = '';
+
+        if (b === 'EPI Boutique') {
+          brandIcon = '<i class="fa-solid fa-person-dress text-boutique-600"></i>';
+          brandClass = 'text-boutique-800 bg-boutique-50 border-boutique-200';
+          barGrad = 'from-purple-500 to-indigo-500';
+        } else if (b === 'Exclusive') {
+          brandIcon = '<i class="fa-solid fa-crown text-exclusive-600"></i>';
+          brandClass = 'text-exclusive-800 bg-exclusive-50 border-exclusive-200';
+          barGrad = 'from-blue-500 to-cyan-500';
+        } else {
+          brandIcon = '<i class="fa-solid fa-wand-magic-sparkles text-beauty-600"></i>';
+          brandClass = 'text-beauty-800 bg-beauty-50 border-beauty-200';
+          barGrad = 'from-pink-500 to-rose-500';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${brandClass}">
+              ${brandIcon} ${b}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-800">$${formatCurrency(s)}</td>
+          <td class="py-3 px-4 text-right font-black text-emerald-600">$${formatCurrency(p)}</td>
+          <td class="py-3 px-4 text-right font-black text-rose-600">$${formatCurrency(d)}</td>
+          <td class="py-3 px-4 text-center font-bold ${rate >= 70 ? 'text-emerald-600' : 'text-amber-600'}">${rate.toFixed(1)}%</td>
+          <td class="py-3 px-4">
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div class="bg-gradient-to-r ${barGrad} h-2.5 rounded-full" style="width: ${rateClamped}%"></div>
+            </div>
+            <div class="text-[10px] text-slate-400 text-right mt-0.5">${p > 0 ? `$${formatCurrency(p)} cobrados` : 'Sin abonos'}</div>
+          </td>
+        `;
+        brandTbody.appendChild(tr);
+      });
+
+      const methodsBox = document.getElementById('repPaymentMethodsContainer');
+      methodsBox.innerHTML = '';
+      const methodEntries = Object.entries(globalMethods).sort((a, b) => b[1] - a[1]);
+
+      if (methodEntries.length === 0) {
+        methodsBox.innerHTML = '<p class="text-xs text-slate-400 italic py-2">No se recibieron abonos en este período.</p>';
+      } else {
+        methodEntries.forEach(([method, amt]) => {
+          const pct = globalPaid > 0 ? ((amt / globalPaid) * 100).toFixed(1) : 0;
+          methodsBox.innerHTML += `
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">${method}</span>
+                <span class="font-black text-emerald-600">$${formatCurrency(amt)} <small class="text-slate-400 font-normal">(${pct}%)</small></span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const debtBox = document.getElementById('repDebtDistributionContainer');
+      debtBox.innerHTML = '';
+      BRANDS.forEach(b => {
+        const d = brandPortfolioDebt[b];
+        const pct = totalPortfolioDebt > 0 ? ((d / totalPortfolioDebt) * 100).toFixed(1) : 0;
+        let color = b === 'EPI Boutique' ? 'bg-purple-600' : (b === 'Exclusive' ? 'bg-blue-600' : 'bg-pink-600');
+        debtBox.innerHTML += `
+          <div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-700">${b}</span>
+              <span class="font-black text-slate-900">$${formatCurrency(d)} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 mt-1 overflow-hidden">
+              <div class="${color} h-2 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      renderDebtorsRankingTable();
+    }
+
+    function setDebtorRankingFilter(brand) {
+      currentDebtorRankingBrand = brand;
+      ['All', 'Boutique', 'Exclusive', 'Beauty'].forEach(tag => {
+        const btn = document.getElementById(`rankBtn${tag}`);
+        if (!btn) return;
+        const isMatch = (tag === 'All' && brand === 'ALL') || (tag === 'Boutique' && brand === 'EPI Boutique') || (tag === brand);
+        if (isMatch) {
+          btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white";
+        } else {
+          btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100";
+        }
+      });
+      renderDebtorsRankingTable();
+    }
+
+    function renderDebtorsRankingTable() {
+      const tbody = document.getElementById('repDebtorsTableBody');
+      tbody.innerHTML = '';
+
+      let list = appData.clients.map(c => {
+        const m = getClientBrandMetrics(c.id);
+        return {
+          id: c.id,
+          name: c.name,
+          doc: c.doc,
+          phone: c.phone,
+          debtBoutique: m.debtBoutique,
+          debtExclusive: m.debtExclusive,
+          debtBeauty: m.debtBeauty,
+          totalBalance: m.totalBalance
+        };
+      });
+
+      if (currentDebtorRankingBrand === 'EPI Boutique') {
+        list = list.filter(c => c.debtBoutique > 0).sort((a, b) => b.debtBoutique - a.debtBoutique);
+      } else if (currentDebtorRankingBrand === 'Exclusive') {
+        list = list.filter(c => c.debtExclusive > 0).sort((a, b) => b.debtExclusive - a.debtExclusive);
+      } else if (currentDebtorRankingBrand === 'Beauty') {
+        list = list.filter(c => c.debtBeauty > 0).sort((a, b) => b.debtBeauty - a.debtBeauty);
+      } else {
+        list = list.filter(c => c.totalBalance > 0).sort((a, b) => b.totalBalance - a.totalBalance);
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 italic">No hay clientes con deuda pendiente en esta selección.</td></tr>`;
+        return;
+      }
+
+      list.forEach((c, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 text-xs sm:text-sm";
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-bold text-slate-400">${idx + 1}</td>
+          <td class="py-2.5 px-4">
+            <div class="font-bold text-slate-800">${c.name}</div>
+            <div class="text-[11px] text-slate-400">${c.doc} • ${c.phone}</div>
+          </td>
+          <td class="py-2.5 px-4 text-right font-bold ${c.debtBoutique > 0 ? 'text-boutique-700' : 'text-slate-300'}">
+            $${formatCurrency(c.debtBoutique)}
+          </td>
+          <td class="py-2.5 px-4 text-right font-bold ${c.debtExclusive > 0 ? 'text-exclusive-700' : 'text-slate-300'}">
+            $${formatCurrency(c.debtExclusive)}
+          </td>
+          <td class="py-2.5 px-4 text-right font-bold ${c.debtBeauty > 0 ? 'text-beauty-700' : 'text-slate-300'}">
+            $${formatCurrency(c.debtBeauty)}
+          </td>
+          <td class="py-2.5 px-4 text-right font-black text-rose-600">
+            $${formatCurrency(c.totalBalance)}
+          </td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="closeModalDirect('modalBrandReport'); showClientHistory('${c.id}');" class="px-2 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
+              Ver Extracto
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // EXPORTACIÓN A EXCEL Y REPORTES
+    function exportBrandReportToExcel() {
+      try {
+        const filteredTxs = getFilteredTransactionsForReport();
+        const brandStats = {
+          'EPI Boutique': { sales: 0, paid: 0, debt: 0 },
+          'Exclusive': { sales: 0, paid: 0, debt: 0 },
+          'Beauty': { sales: 0, paid: 0, debt: 0 }
+        };
+
+        filteredTxs.forEach(t => {
+          const b = t.brand || 'EPI Boutique';
+          const amt = parseFloat(t.amount || 0);
+          if (!brandStats[b]) brandStats[b] = { sales: 0, paid: 0, debt: 0 };
+          if (t.type === 'SALE') brandStats[b].sales += amt;
+          else if (t.type === 'PAYMENT') brandStats[b].paid += amt;
+        });
+
+        appData.clients.forEach(c => {
+          const m = getClientBrandMetrics(c.id);
+          brandStats['EPI Boutique'].debt += m.debtBoutique;
+          brandStats['Exclusive'].debt += m.debtExclusive;
+          brandStats['Beauty'].debt += m.debtBeauty;
+        });
+
+        const summaryRows = [
+          ["REPORTE FINANCIERO Y AUDITORÍA POR MARCA - CREDICONTROL CLOUD"],
+          ["Período:", currentReportPeriod.toUpperCase()],
+          ["Fecha de Emisión:", new Date().toLocaleString('es-ES')],
+          [],
+          ["MARCA", "VENTAS A CRÉDITO ($)", "ABONOS COBRADOS ($)", "DEUDA ACTIVA ($)", "% EFECTIVIDAD COBRANZA"]
+        ];
+
+        BRANDS.forEach(b => {
+          const s = brandStats[b].sales;
+          const p = brandStats[b].paid;
+          const d = brandStats[b].debt;
+          const pct = s > 0 ? ((p / s) * 100).toFixed(1) + '%' : (p > 0 ? '100%' : '0%');
+          summaryRows.push([b, s, p, d, pct]);
+        });
+
+        const rankingRows = [
+          [],
+          ["RANKING DETALLADO DE DEUDORES POR MARCA"],
+          ["CLIENTE", "CÉDULA", "TELÉFONO", "DEUDA BOUTIQUE ($)", "DEUDA EXCLUSIVE ($)", "DEUDA BEAUTY ($)", "DEUDA TOTAL ($)"]
+        ];
+
+        appData.clients.forEach(c => {
+          const m = getClientBrandMetrics(c.id);
+          if (m.totalBalance > 0) {
+            rankingRows.push([c.name, c.doc, c.phone, m.debtBoutique, m.debtExclusive, m.debtBeauty, m.totalBalance]);
+          }
+        });
+
+        const wb = XLSX.utils.book_new();
+        const wsSummary = XLSX.utils.aoa_to_sheet([...summaryRows, ...rankingRows]);
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Auditoria_Marcas");
+
+        const dateSuffix = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Reporte_Marcas_${currentReportPeriod}_${dateSuffix}.xlsx`);
+        showToast('Reporte por Marca exportado a Excel', 'success');
+      } catch (e) {
+        showToast('Error al exportar reporte', 'error');
+      }
+    }
+
+    function printBrandFinancialReport() {
+      const filteredTxs = getFilteredTransactionsForReport();
+      const brandStats = {
+        'EPI Boutique': { sales: 0, paid: 0, debt: 0 },
+        'Exclusive': { sales: 0, paid: 0, debt: 0 },
+        'Beauty': { sales: 0, paid: 0, debt: 0 }
+      };
+
+      let gSales = 0, gPaid = 0;
+      filteredTxs.forEach(t => {
+        const b = t.brand || 'EPI Boutique';
+        const amt = parseFloat(t.amount || 0);
+        if (!brandStats[b]) brandStats[b] = { sales: 0, paid: 0, debt: 0 };
+        if (t.type === 'SALE') { brandStats[b].sales += amt; gSales += amt; }
+        else if (t.type === 'PAYMENT') { brandStats[b].paid += amt; gPaid += amt; }
+      });
+
+      let gDebt = 0;
+      appData.clients.forEach(c => {
+        const m = getClientBrandMetrics(c.id);
+        brandStats['EPI Boutique'].debt += m.debtBoutique;
+        brandStats['Exclusive'].debt += m.debtExclusive;
+        brandStats['Beauty'].debt += m.debtBeauty;
+        gDebt += m.totalBalance;
+      });
+
+      let brandTableRows = '';
+      BRANDS.forEach(b => {
+        const s = brandStats[b].sales;
+        const p = brandStats[b].paid;
+        const d = brandStats[b].debt;
+        const rate = s > 0 ? ((p / s) * 100).toFixed(1) + '%' : (p > 0 ? '100%' : '0%');
+        brandTableRows += `
+          <tr style="border-bottom:1px solid #e2e8f0; font-size:11px;">
+            <td style="padding:6px 8px; font-weight:bold;">${b}</td>
+            <td style="padding:6px 8px; text-align:right;">$${formatCurrency(s)}</td>
+            <td style="padding:6px 8px; text-align:right; color:#059669; font-weight:bold;">$${formatCurrency(p)}</td>
+            <td style="padding:6px 8px; text-align:right; color:#b91c1c; font-weight:bold;">$${formatCurrency(d)}</td>
+            <td style="padding:6px 8px; text-align:center;">${rate}</td>
+          </tr>
+        `;
+      });
+
+      let debtorRows = '';
+      const debtors = appData.clients.map(c => ({ client: c, m: getClientBrandMetrics(c.id) }))
+                                    .filter(x => x.m.totalBalance > 0)
+                                    .sort((a, b) => b.m.totalBalance - a.m.totalBalance);
+
+      debtors.forEach((x, i) => {
+        debtorRows += `
+          <tr style="border-bottom:1px solid #f1f5f9; font-size:10px;">
+            <td style="padding:4px 6px;">${i + 1}</td>
+            <td style="padding:4px 6px;"><strong>${x.client.name}</strong> (${x.client.doc})</td>
+            <td style="padding:4px 6px; text-align:right;">$${formatCurrency(x.m.debtBoutique)}</td>
+            <td style="padding:4px 6px; text-align:right;">$${formatCurrency(x.m.debtExclusive)}</td>
+            <td style="padding:4px 6px; text-align:right;">$${formatCurrency(x.m.debtBeauty)}</td>
+            <td style="padding:4px 6px; text-align:right; font-weight:bold; color:#b91c1c;">$${formatCurrency(x.m.totalBalance)}</td>
+          </tr>
+        `;
+      });
+
+      const printHtml = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Reporte Financiero por Marca</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            body { font-family: sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
+            .header { border-bottom: 2px solid #4338ca; padding-bottom: 8px; margin-bottom: 12px; }
+            .kpi-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+            .kpi-box { width: 31%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            th { background: #f1f5f9; padding: 6px; text-align: left; font-size: 10px; border-bottom: 2px solid #cbd5e1; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="margin:0; font-size:18px; color:#312e81;">💎 CREDICONTROL CLOUD - REPORTE DE MARCAS</h1>
+            <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">
+              Período: ${currentReportPeriod.toUpperCase()} • Fecha: ${new Date().toLocaleString('es-ES')}
+            </p>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-box">
+              <span style="font-size:9px; color:#64748b; font-weight:bold;">VENTAS A CRÉDITO</span>
+              <div style="font-size:16px; font-weight:900;">$${formatCurrency(gSales)} USD</div>
+            </div>
+            <div class="kpi-box">
+              <span style="font-size:9px; color:#059669; font-weight:bold;">ABONOS COBRADOS</span>
+              <div style="font-size:16px; font-weight:900; color:#059669;">$${formatCurrency(gPaid)} USD</div>
+            </div>
+            <div class="kpi-box">
+              <span style="font-size:9px; color:#b91c1c; font-weight:bold;">DEUDA CARTERA TOTAL</span>
+              <div style="font-size:16px; font-weight:900; color:#b91c1c;">$${formatCurrency(gDebt)} USD</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:12px; margin:12px 0 4px 0;">1. Consolidado Comparativo por Marca</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Marca</th>
+                <th style="text-align:right;">Ventas ($)</th>
+                <th style="text-align:right;">Abonos ($)</th>
+                <th style="text-align:right;">Deuda Activa ($)</th>
+                <th style="text-align:center;">% Efectividad</th>
+              </tr>
+            </thead>
+            <tbody>${brandTableRows}</tbody>
+          </table>
+
+          <h3 style="font-size:12px; margin:16px 0 4px 0;">2. Cartera Activa de Clientes Deudores</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th style="text-align:right;">Boutique</th>
+                <th style="text-align:right;">Exclusive</th>
+                <th style="text-align:right;">Beauty</th>
+                <th style="text-align:right;">Total Saldo</th>
+              </tr>
+            </thead>
+            <tbody>${debtorRows}</tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      executeCleanPrint(printHtml);
+    }
+
+    // HISTORIAL Y ACCIONES
+    function showClientHistory(clientId) {
+      const client = appData.clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      currentClientIdForDetail = clientId;
+
+      document.getElementById('detailClientAvatar').innerText = client.name.charAt(0).toUpperCase();
+      document.getElementById('detailClientName').innerText = client.name;
+      document.getElementById('detailClientDoc').innerText = client.doc;
+      document.getElementById('detailClientPhone').innerText = client.phone;
+
+      const addrEl = document.getElementById('detailClientAddressText');
+      if (client.address) {
+        addrEl.innerText = '📍 ' + client.address;
+        addrEl.classList.remove('hidden');
+      } else {
+        addrEl.classList.add('hidden');
+      }
+
+      const limitEl = document.getElementById('detailClientLimitBadge');
+      if (client.creditLimit) {
+        limitEl.innerText = `• Límite: $${formatCurrency(client.creditLimit)}`;
+      } else {
+        limitEl.innerText = '';
+      }
+
+      const m = getClientBrandMetrics(clientId);
+      document.getElementById('detailDebtBoutique').innerText = `$${formatCurrency(m.debtBoutique)}`;
+      document.getElementById('detailDebtExclusive').innerText = `$${formatCurrency(m.debtExclusive)}`;
+      document.getElementById('detailDebtBeauty').innerText = `$${formatCurrency(m.debtBeauty)}`;
+
+      const btnAbBoutique = document.getElementById('btnAbonarBoutique');
+      const btnAbExclusive = document.getElementById('btnAbonarExclusive');
+      const btnAbBeauty = document.getElementById('btnAbonarBeauty');
+
+      btnAbBoutique.disabled = m.debtBoutique <= 0;
+      btnAbBoutique.className = m.debtBoutique > 0 
+        ? "px-2.5 py-1 text-xs font-bold rounded-lg bg-boutique-600 text-white hover:bg-boutique-700 transition"
+        : "px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed";
+
+      btnAbExclusive.disabled = m.debtExclusive <= 0;
+      btnAbExclusive.className = m.debtExclusive > 0 
+        ? "px-2.5 py-1 text-xs font-bold rounded-lg bg-exclusive-600 text-white hover:bg-exclusive-700 transition"
+        : "px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed";
+
+      btnAbBeauty.disabled = m.debtBeauty <= 0;
+      btnAbBeauty.className = m.debtBeauty > 0 
+        ? "px-2.5 py-1 text-xs font-bold rounded-lg bg-beauty-600 text-white hover:bg-beauty-700 transition"
+        : "px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed";
+
+      const balEl = document.getElementById('detailClientBalance');
+      const badgeEl = document.getElementById('detailClientBadge');
+      balEl.innerText = `$${formatCurrency(m.totalBalance)}`;
+
+      if (m.totalBalance > 0.009) {
+        balEl.className = "text-2xl sm:text-3xl font-black text-rose-600";
+        badgeEl.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700";
+        badgeEl.innerText = "Deudor Activo";
+      } else {
+        balEl.className = "text-2xl sm:text-3xl font-black text-emerald-600";
+        badgeEl.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
+        badgeEl.innerText = "Al Día ($0.00)";
+      }
+
+      renderHistoryTransactions();
+      openModalDirect('modalClientHistory');
+    }
+
+    function triggerQuickBrandPayment(brandName) {
+      if (!currentClientIdForDetail) return;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      populateClientSelects();
+      document.getElementById('paymentClientId').value = currentClientIdForDetail;
+      
+      const radio = document.querySelector(`input[name="paymentBrand"][value="${brandName}"]`);
+      if (radio) radio.checked = true;
+
+      document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('paymentAmountUSD').value = '';
+      document.getElementById('paymentMethod').value = 'Efectivo ($ USD)';
+      document.getElementById('paymentRef').value = '';
+      document.getElementById('paymentNotes').value = '';
+
+      toggleBsFields();
+      onPaymentClientOrBrandChanged();
+      openModalDirect('modalPayment');
+    }
+
+    function setHistoryFilter(f) {
+      currentHistoryFilter = f;
+      ['all', 'sales', 'payments'].forEach(type => {
+        const btn = document.getElementById(`btnFilter${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        if (type === f) {
+          btn.className = "px-3 py-1 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800";
+        } else {
+          btn.className = "px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900";
+        }
+      });
+      renderHistoryTransactions();
+    }
+
+    function renderHistoryTransactions() {
+      const clientId = currentClientIdForDetail;
+      if (!clientId) return;
+
+      const tbody = document.getElementById('historyTableBody');
+      const noHistory = document.getElementById('noHistoryMessage');
+      tbody.innerHTML = '';
+
+      let clientTxs = appData.transactions
+        .filter(t => t.clientId === clientId)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (clientTxs.length === 0) {
+        noHistory.classList.remove('hidden');
+        return;
+      } else {
+        noHistory.classList.add('hidden');
+      }
+
+      const brandBalances = { 'EPI Boutique': 0, 'Exclusive': 0, 'Beauty': 0 };
+
+      const txsCalculated = clientTxs.map(tx => {
+        const b = tx.brand || 'EPI Boutique';
+        if (!brandBalances[b]) brandBalances[b] = 0;
+
+        if (tx.type === 'SALE') brandBalances[b] += parseFloat(tx.amount);
+        else brandBalances[b] -= parseFloat(tx.amount);
+
+        return { ...tx, brandRemaining: Math.max(0, brandBalances[b]) };
+      });
+
+      let displayList = [...txsCalculated];
+      if (currentHistoryFilter === 'sales') displayList = displayList.filter(t => t.type === 'SALE');
+      else if (currentHistoryFilter === 'payments') displayList = displayList.filter(t => t.type === 'PAYMENT');
+
+      displayList.reverse();
+
+      displayList.forEach(item => {
+        const isSale = item.type === 'SALE';
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 text-xs sm:text-sm";
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-slate-600 whitespace-nowrap">${formatDate(item.date)}</td>
+          <td class="py-3 px-3">
+            ${getBrandBadge(item.brand, !isSale)}
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-medium text-slate-800">${item.concept}</div>
+            ${item.notes ? `<div class="text-[11px] text-slate-400 italic">${item.notes}</div>` : ''}
+          </td>
+          <td class="py-3 px-3 text-slate-600">
+            ${isSale ? '<span class="text-slate-400">Venta Crédito</span>' : `
+              <span class="font-semibold text-slate-700">${item.method}</span>
+              ${item.ref ? `<div class="text-[11px] text-slate-400">Ref: ${item.ref}</div>` : ''}
+            `}
+          </td>
+          <td class="py-3 px-3 text-right font-bold ${isSale ? 'text-amber-600' : 'text-emerald-600'}">
+            ${isSale ? '+' : '-'}$${formatCurrency(item.amount)}
+          </td>
+          <td class="py-3 px-3 text-right font-black text-slate-800">
+            $${formatCurrency(item.brandRemaining)}
+          </td>
+          <td class="py-3 px-3 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              ${isSale ? `
+                <button onclick="triggerEditSaleFromHistory('${item.id}')" title="Editar Compra" class="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-md transition">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              ` : `
+                <button onclick="triggerEditPaymentFromHistory('${item.id}')" title="Editar Abono" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="reprintReceipt('${item.id}')" title="Imprimir Recibo" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition">
+                  <i class="fa-solid fa-print"></i>
+                </button>
+              `}
+              <button onclick="confirmDeleteTransaction('${item.id}')" title="Eliminar Movimiento" class="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-md transition">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getBrandBadge(brandName, isPayment = false) {
+      const b = brandName || 'EPI Boutique';
+      const action = isPayment ? 'Abono: ' : '';
+      if (b === 'Exclusive') {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-exclusive-100 text-exclusive-800 border border-exclusive-200">
+                  <i class="fa-solid fa-crown text-[9px] text-exclusive-600"></i> ${action}Exclusive
+                </span>`;
+      } else if (b === 'Beauty') {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-beauty-100 text-beauty-800 border border-beauty-200">
+                  <i class="fa-solid fa-wand-magic-sparkles text-[9px] text-beauty-600"></i> ${action}Beauty
+                </span>`;
+      } else {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-boutique-100 text-boutique-800 border border-boutique-200">
+                  <i class="fa-solid fa-person-dress text-xs text-boutique-600"></i> ${action}EPI Boutique
+                </span>`;
+      }
+    }
+
+    // CRUD: VENTAS
+    async function handleSaveSale(e) {
+      e.preventDefault();
+      const clientId = document.getElementById('saleClientId').value;
+      const date = document.getElementById('saleDate').value;
+      const amount = parseFloat(document.getElementById('saleAmount').value);
+      const concept = document.getElementById('saleConcept').value.trim();
+      const notes = document.getElementById('saleNotes').value.trim();
+      const brand = document.querySelector('input[name="saleBrand"]:checked').value;
+
+      if (!clientId || !date || isNaN(amount) || amount <= 0 || !concept) {
+        showToast('Completa los campos obligatorios de la compra', 'error');
+        return;
+      }
+
+      const newTx = {
+        clientId,
+        type: 'SALE',
+        brand,
+        date,
+        concept,
+        amount: Number(amount.toFixed(2)),
+        method: '-',
+        ref: 'Crédito',
+        notes,
+        createdAt: Date.now()
+      };
+
+      if (db) {
+        const docRef = await db.collection("transactions").add(newTx);
+        appData.transactions.push({ id: docRef.id, ...newTx });
+      } else {
+        appData.transactions.push({ id: 'tx_' + Date.now(), ...newTx });
+      }
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalSale');
+      document.getElementById('saleForm').reset();
+      setDefaultDates();
+
+      showToast(`Venta [${brand}] por $${amount.toFixed(2)} USD agregada`, 'success');
+
+      if (returnToHistoryOnClose && currentClientIdForDetail) {
+        showClientHistory(currentClientIdForDetail);
+      } else {
+        returnToHistoryOnClose = false;
+      }
+    }
+
+    // CRUD: ABONOS
+    async function handleSavePayment(e) {
+      e.preventDefault();
+      if (!validatePaymentAmountStrictly()) return;
+
+      const clientId = document.getElementById('paymentClientId').value;
+      const date = document.getElementById('paymentDate').value;
+      const amountUSD = parseFloat(document.getElementById('paymentAmountUSD').value);
+      const method = document.getElementById('paymentMethod').value;
+      let ref = document.getElementById('paymentRef').value.trim();
+      let notes = document.getElementById('paymentNotes').value.trim();
+      const rate = document.getElementById('paymentRate').value;
+      const totalBs = document.getElementById('paymentBsTotal').value;
+      const brand = document.querySelector('input[name="paymentBrand"]:checked').value;
+
+      if (method === 'Bolívares (Bs.)' && rate && totalBs) {
+        notes = (notes ? notes + ' | ' : '') + `Tasa: ${rate} Bs/$ (${totalBs})`;
+      }
+
+      const newTx = {
+        clientId,
+        type: 'PAYMENT',
+        brand,
+        date,
+        concept: `Abono a Cuenta (${brand})`,
+        amount: Number(amountUSD.toFixed(2)),
+        method,
+        ref: ref || 'Comprobante',
+        notes,
+        createdAt: Date.now()
+      };
+
+      let createdId = 'tx_' + Date.now();
+      if (db) {
+        const docRef = await db.collection("transactions").add(newTx);
+        createdId = docRef.id;
+        appData.transactions.push({ id: createdId, ...newTx });
+      } else {
+        appData.transactions.push({ id: createdId, ...newTx });
+      }
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalPayment');
+
+      const savedClient = appData.clients.find(c => c.id === clientId);
+      const metrics = getClientBrandMetrics(clientId);
+
+      generateReceiptModal({ id: createdId, ...newTx }, savedClient, metrics.brands[brand].balance, metrics.totalBalance);
+
+      document.getElementById('paymentForm').reset();
+      toggleBsFields();
+      setDefaultDates();
+      showToast(`Abono aplicado exitosamente a [${brand}]`, 'success');
+    }
+
+    // CRUD: CLIENTES
+    async function handleSaveClient(e) {
+      e.preventDefault();
+      const name = document.getElementById('clientName').value.trim();
+      const doc = document.getElementById('clientDoc').value.trim();
+      const phone = document.getElementById('clientPhone').value.trim();
+      const address = document.getElementById('clientAddress').value.trim();
+      const creditLimit = parseFloat(document.getElementById('clientCreditLimit').value) || null;
+
+      if (!name || !doc) {
+        showToast('Completa los campos obligatorios', 'error');
+        return;
+      }
+
+      if (appData.clients.some(c => c.doc.toLowerCase() === doc.toLowerCase())) {
+        showToast('Ya existe un cliente registrado con esa cédula o RIF', 'error');
+        return;
+      }
+
+      const newClient = {
+        name,
+        doc,
+        phone,
+        address,
+        creditLimit: creditLimit ? Number(creditLimit.toFixed(2)) : null,
+        createdAt: Date.now()
+      };
+
+      if (db) {
+        const docRef = await db.collection("clients").add(newClient);
+        appData.clients.push({ id: docRef.id, ...newClient });
+      } else {
+        appData.clients.push({ id: 'cli_' + Date.now(), ...newClient });
+      }
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalClient');
+      document.getElementById('clientForm').reset();
+      showToast(`Cliente ${name} guardado correctamente`, 'success');
+    }
+
+    async function handleUpdateClient(e) {
+      e.preventDefault();
+      const id = document.getElementById('editClientId').value;
+      const name = document.getElementById('editClientName').value.trim();
+      const doc = document.getElementById('editClientDoc').value.trim();
+      const phone = document.getElementById('editClientPhone').value.trim();
+      const address = document.getElementById('editClientAddress').value.trim();
+      const creditLimit = parseFloat(document.getElementById('editClientCreditLimit').value) || null;
+
+      const idx = appData.clients.findIndex(c => c.id === id);
+      if (idx === -1) return;
+
+      if (appData.clients.some(c => c.id !== id && c.doc.toLowerCase() === doc.toLowerCase())) {
+        showToast('Esa cédula ya pertenece a otro cliente', 'error');
+        return;
+      }
+
+      const updatedData = { name, doc, phone, address, creditLimit };
+
+      if (db) {
+        await db.collection("clients").doc(id).update(updatedData);
+      }
+
+      appData.clients[idx] = { ...appData.clients[idx], ...updatedData };
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalEditClient');
+
+      if (returnToHistoryOnClose && currentClientIdForDetail === id) {
+        showClientHistory(id);
+      } else {
+        returnToHistoryOnClose = false;
+      }
+      showToast('Datos del cliente actualizados', 'success');
+    }
+
+    function confirmDeleteClient(clientId) {
+      const client = appData.clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      const m = getClientBrandMetrics(clientId);
+      if (m.totalBalance > 0.009) {
+        showToast(`No se puede eliminar. Tiene saldo deudor de $${m.totalBalance.toFixed(2)} USD`, 'error');
+        return;
+      }
+
+      document.getElementById('deleteModalTitle').innerText = `¿Eliminar a ${client.name}?`;
+      document.getElementById('deleteModalDesc').innerText = 'Se eliminará el cliente y todos sus registros.';
+
+      const btnConfirm = document.getElementById('btnConfirmDeleteAction');
+      btnConfirm.onclick = async () => {
+        if (db) {
+          await db.collection("clients").doc(clientId).delete();
+          const txsToDelete = appData.transactions.filter(t => t.clientId === clientId);
+          for (const tx of txsToDelete) {
+            await db.collection("transactions").doc(tx.id).delete();
+          }
+        }
+        appData.transactions = appData.transactions.filter(t => t.clientId !== clientId);
+        appData.clients = appData.clients.filter(c => c.id !== clientId);
+        saveData();
+        refreshDashboard();
+        closeModalDirect('modalConfirmDelete');
+        if (currentClientIdForDetail === clientId) closeModalDirect('modalClientHistory');
+        showToast('Cliente eliminado permanentemente', 'info');
+      };
+
+      closeModalDirect('modalEditClient');
+      openModalDirect('modalConfirmDelete');
+    }
+
+    function triggerEditSaleFromHistory(txId) {
+      const tx = appData.transactions.find(t => t.id === txId);
+      if (!tx || tx.type !== 'SALE') return;
+
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      document.getElementById('editSaleTxId').value = tx.id;
+      document.getElementById('editSaleDate').value = tx.date;
+      document.getElementById('editSaleAmount').value = tx.amount;
+      document.getElementById('editSaleConcept').value = tx.concept;
+      document.getElementById('editSaleNotes').value = tx.notes || '';
+
+      const targetRadio = document.querySelector(`input[name="editSaleBrand"][value="${tx.brand || 'EPI Boutique'}"]`);
+      if (targetRadio) targetRadio.checked = true;
+
+      openModalDirect('modalEditSale');
+    }
+
+    async function handleUpdateSale(e) {
+      e.preventDefault();
+      const txId = document.getElementById('editSaleTxId').value;
+      const date = document.getElementById('editSaleDate').value;
+      const amount = parseFloat(document.getElementById('editSaleAmount').value);
+      const concept = document.getElementById('editSaleConcept').value.trim();
+      const notes = document.getElementById('editSaleNotes').value.trim();
+      const brand = document.querySelector('input[name="editSaleBrand"]:checked').value;
+
+      const idx = appData.transactions.findIndex(t => t.id === txId);
+      if (idx === -1) return;
+
+      const updatedTx = {
+        date,
+        brand,
+        amount: Number(amount.toFixed(2)),
+        concept,
+        notes
+      };
+
+      if (db) {
+        await db.collection("transactions").doc(txId).update(updatedTx);
+      }
+
+      appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalEditSale');
+
+      if (returnToHistoryOnClose && currentClientIdForDetail) {
+        showClientHistory(currentClientIdForDetail);
+      }
+      showToast('Compra modificada y saldos actualizados', 'success');
+    }
+
+    function triggerEditPaymentFromHistory(txId) {
+      const tx = appData.transactions.find(t => t.id === txId);
+      if (!tx || tx.type !== 'PAYMENT') return;
+
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      document.getElementById('editPaymentTxId').value = tx.id;
+      document.getElementById('editPaymentDate').value = tx.date;
+      document.getElementById('editPaymentAmountUSD').value = tx.amount;
+      document.getElementById('editPaymentMethod').value = tx.method;
+      document.getElementById('editPaymentRef').value = tx.ref || '';
+      document.getElementById('editPaymentNotes').value = tx.notes || '';
+
+      const targetRadio = document.querySelector(`input[name="editPaymentBrand"][value="${tx.brand || 'EPI Boutique'}"]`);
+      if (targetRadio) targetRadio.checked = true;
+
+      openModalDirect('modalEditPayment');
+    }
+
+    async function handleUpdatePayment(e) {
+      e.preventDefault();
+      const txId = document.getElementById('editPaymentTxId').value;
+      const date = document.getElementById('editPaymentDate').value;
+      const amount = parseFloat(document.getElementById('editPaymentAmountUSD').value);
+      const method = document.getElementById('editPaymentMethod').value;
+      const ref = document.getElementById('editPaymentRef').value.trim();
+      const notes = document.getElementById('editPaymentNotes').value.trim();
+      const brand = document.querySelector('input[name="editPaymentBrand"]:checked').value;
+
+      const idx = appData.transactions.findIndex(t => t.id === txId);
+      if (idx === -1) return;
+
+      const updatedTx = {
+        date,
+        brand,
+        amount: Number(amount.toFixed(2)),
+        method,
+        ref,
+        notes
+      };
+
+      if (db) {
+        await db.collection("transactions").doc(txId).update(updatedTx);
+      }
+
+      appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
+
+      saveData();
+      refreshDashboard();
+      closeModalDirect('modalEditPayment');
+
+      if (returnToHistoryOnClose && currentClientIdForDetail) {
+        showClientHistory(currentClientIdForDetail);
+      }
+      showToast('Abono modificado y saldos recalculados', 'success');
+    }
+
+    let pendingDeleteTxId = null;
+    function confirmDeleteTransaction(txId) {
+      const tx = appData.transactions.find(t => t.id === txId);
+      if (!tx) return;
+
+      pendingDeleteTxId = txId;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      const isSale = tx.type === 'SALE';
+      document.getElementById('deleteModalTitle').innerText = isSale ? '¿Eliminar compra a crédito?' : '¿Eliminar abono?';
+      document.getElementById('deleteModalDesc').innerText = `${tx.concept} [${tx.brand}] ($${formatCurrency(tx.amount)} USD). Se recalculará la deuda.`;
+
+      const btnConfirm = document.getElementById('btnConfirmDeleteAction');
+      btnConfirm.onclick = async () => {
+        if (db) {
+          await db.collection("transactions").doc(pendingDeleteTxId).delete();
+        }
+        appData.transactions = appData.transactions.filter(t => t.id !== pendingDeleteTxId);
+        pendingDeleteTxId = null;
+        saveData();
+        refreshDashboard();
+        closeModalDirect('modalConfirmDelete');
+        if (currentClientIdForDetail) showClientHistory(currentClientIdForDetail);
+        showToast('Movimiento eliminado y saldo recalculado', 'info');
+      };
+
+      openModalDirect('modalConfirmDelete');
+    }
+
+    // IMPRESIÓN LIMPIA EN IFRAME AISLADO
+    function executeCleanPrint(fullHtmlDocument) {
+      let printFrame = document.getElementById('cleanPrintIframe');
+      if (printFrame) printFrame.remove();
+
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'cleanPrintIframe';
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      printFrame.style.visibility = 'hidden';
+      document.body.appendChild(printFrame);
+
+      const frameDoc = printFrame.contentWindow || printFrame.contentDocument;
+      const targetDoc = frameDoc.document || frameDoc;
+
+      targetDoc.open();
+      targetDoc.write(fullHtmlDocument);
+      targetDoc.close();
+
+      setTimeout(() => {
+        try {
+          if (printFrame.contentWindow) {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+          }
+        } catch (err) {
+          window.print();
+        }
+      }, 350);
+    }
+
+    function generateReceiptModal(tx, client, brandRemaining, totalRemaining) {
+      const receiptContainer = document.getElementById('receiptContent');
+      const receiptNum = 'REC-' + tx.id.replace('tx_', '').slice(-6);
+      const brandName = tx.brand || 'EPI Boutique';
+
+      receiptContainer.innerHTML = `
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${receiptNum}</span>
+          <h4 class="font-black text-slate-900 text-lg leading-tight">Comprobante de Abono</h4>
+          <div class="mt-1">${getBrandBadge(brandName, true)}</div>
+        </div>
+        <div class="border-y border-dashed border-slate-200 py-3 my-2 text-left space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Cliente:</span>
+            <span class="font-bold text-slate-800">${client.name}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">C.I / RIF:</span>
+            <span class="text-slate-700">${client.doc}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Fecha:</span>
+            <span class="text-slate-700">${formatDate(tx.date)}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Marca:</span>
+            <span class="font-bold text-indigo-700">${brandName}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Método de Pago:</span>
+            <span class="font-semibold text-slate-800">${tx.method}</span>
+          </div>
+          ${tx.ref ? `
+          <div class="flex justify-between">
+            <span class="text-slate-400">Referencia:</span>
+            <span class="text-slate-700">${tx.ref}</span>
+          </div>` : ''}
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+            <span class="text-sm font-bold text-slate-700">Monto Abonado:</span>
+            <span class="text-base font-black text-emerald-600">$${formatCurrency(tx.amount)} USD</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl space-y-1 mt-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-500">Saldo Restante en ${brandName}:</span>
+              <span class="font-bold text-slate-800">$${formatCurrency(brandRemaining)} USD</span>
+            </div>
+            <div class="flex justify-between text-xs pt-1 border-t border-slate-200">
+              <span class="font-bold text-slate-700">Deuda Consolidada Total:</span>
+              <span class="font-black ${totalRemaining > 0 ? 'text-rose-600' : 'text-emerald-600'}">$${formatCurrency(totalRemaining)} USD</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const btnPrint = document.getElementById('btnPrintReceiptModal');
+      btnPrint.onclick = () => printPaymentReceipt(tx.id);
+
+      openModalDirect('modalReceipt');
+    }
+
+    function reprintReceipt(txId) {
+      const tx = appData.transactions.find(t => t.id === txId);
+      if (!tx) return;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      const client = appData.clients.find(c => c.id === tx.clientId);
+      const m = getClientBrandMetrics(client.id);
+      generateReceiptModal(tx, client, m.brands[tx.brand].balance, m.totalBalance);
+    }
+
+    function printPaymentReceipt(txId) {
+      const tx = appData.transactions.find(t => t.id === txId);
+      if (!tx || tx.type !== 'PAYMENT') return;
+
+      const client = appData.clients.find(c => c.id === tx.clientId);
+      if (!client) return;
+
+      const m = getClientBrandMetrics(client.id);
+      const brandName = tx.brand || 'EPI Boutique';
+      const receiptNumber = 'REC-' + tx.id.replace('tx_', '').slice(-6);
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Recibo ${receiptNumber}</title>
+          <style>
+            @page { size: 80mm auto; margin: 4mm; }
+            body { font-family: sans-serif; font-size: 12px; margin: 0; padding: 10px; max-width: 300px; color: #1e293b; }
+            .text-center { text-align: center; }
+            .header { border-bottom: 2px dashed #94a3b8; padding-bottom: 8px; margin-bottom: 10px; }
+            .logo-title { font-size: 16px; font-weight: 900; color: #312e81; margin: 0; }
+            .brand-badge { display: inline-block; padding: 3px 8px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 5px; }
+            .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+            .highlight { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center; margin: 10px 0; }
+            .amount { font-size: 20px; font-weight: 900; color: #059669; }
+            .sigs { display: flex; justify-content: space-between; margin-top: 25px; font-size: 9px; color: #64748b; }
+            .line { border-top: 1px solid #94a3b8; width: 45%; text-align: center; padding-top: 3px; }
+          </style>
+        </head>
+        <body>
+          <div class="header text-center">
+            <h1 class="logo-title">💎 CREDICONTROL CLOUD</h1>
+            <p style="margin:2px 0; font-size:10px; color:#64748b;">EPI Boutique • Exclusive • Beauty</p>
+            <div class="brand-badge">Abono para: ${brandName}</div>
+            <p style="margin:4px 0 0 0; font-size:11px; font-weight:bold;">${receiptNumber}</p>
+          </div>
+          <div class="row"><span>Fecha:</span><strong>${formatDate(tx.date)}</strong></div>
+          <div class="row"><span>Cliente:</span><strong>${client.name}</strong></div>
+          <div class="row"><span>Cédula/RIF:</span><strong>${client.doc}</strong></div>
+          <div class="row"><span>Teléfono:</span><strong>${client.phone}</strong></div>
+          <div class="row" style="border-top:1px dashed #cbd5e1; margin-top:6px; padding-top:6px;">
+            <span>Método de Pago:</span><strong>${tx.method}</strong>
+          </div>
+          ${tx.ref ? `<div class="row"><span>Referencia:</span><strong>${tx.ref}</strong></div>` : ''}
+          <div class="highlight">
+            <div style="font-size:10px; text-transform:uppercase; color:#64748b;">Monto Abonado</div>
+            <div class="amount">$${formatCurrency(tx.amount)} USD</div>
+          </div>
+          <div class="row"><span>Saldo Pendiente en ${brandName}:</span><strong>$${formatCurrency(m.brands[brandName].balance)} USD</strong></div>
+          <div class="row" style="font-weight:bold; color:#b91c1c;"><span>Deuda Consolidada Total:</span><strong>$${formatCurrency(m.totalBalance)} USD</strong></div>
+          <div class="sigs">
+            <div class="line">Firma Cliente</div>
+            <div class="line">Caja (${brandName})</div>
+          </div>
+          <p class="text-center" style="font-size:9px; color:#94a3b8; margin-top:16px;">¡Gracias por su puntual abono!</p>
+        </body>
+        </html>
+      `;
+
+      executeCleanPrint(html);
+    }
+
+    function printAccountStatement() {
+      if (!currentClientIdForDetail) return;
+      const client = appData.clients.find(c => c.id === currentClientIdForDetail);
+      if (!client) return;
+
+      const m = getClientBrandMetrics(client.id);
+      const clientTxs = appData.transactions
+        .filter(t => t.clientId === client.id)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      let rowsHtml = '';
+      clientTxs.forEach((t, i) => {
+        const isSale = t.type === 'SALE';
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        rowsHtml += `
+          <tr style="background:${bg}; border-bottom:1px solid #e2e8f0; font-size:11px;">
+            <td style="padding:6px 8px;">${formatDate(t.date)}</td>
+            <td style="padding:6px 8px; font-weight:bold;">${t.brand}</td>
+            <td style="padding:6px 8px;">${t.concept}</td>
+            <td style="padding:6px 8px;">${isSale ? 'Crédito' : t.method}</td>
+            <td style="padding:6px 8px; text-align:right; font-weight:bold; color:${isSale ? '#d97706' : '#059669'};">
+              ${isSale ? '+' : '-'}$${formatCurrency(t.amount)}
+            </td>
+          </tr>
+        `;
+      });
+
+      const statementHtml = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Estado de Cuenta - ${client.name}</title>
+          <style>
+            @page { size: A4 portrait; margin: 15mm; }
+            body { font-family: sans-serif; font-size: 12px; color: #0f172a; margin: 0; }
+            .header-table { width: 100%; border-bottom: 2px solid #4338ca; padding-bottom: 10px; margin-bottom: 15px; }
+            .card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
+            .brand-box { display: inline-block; width: 30%; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; text-align: center; }
+            table.tx-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            table.tx-table th { background: #f1f5f9; padding: 8px; text-align: left; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td>
+                <h1 style="margin:0; font-size:20px; color:#3730a3;">💎 CREDICONTROL CLOUD</h1>
+                <p style="margin:2px 0 0 0; color:#64748b; font-size:11px;">EPI Boutique • Exclusive • Beauty</p>
+              </td>
+              <td style="text-align:right; font-size:11px;">
+                <strong>ESTADO DE CUENTA</strong><br>
+                Fecha: ${new Date().toLocaleDateString('es-ES')}
+              </td>
+            </tr>
+          </table>
+
+          <div class="card">
+            <strong>Cliente:</strong> ${client.name} | <strong>Cédula:</strong> ${client.doc} | <strong>Tel:</strong> ${client.phone}<br>
+            <div style="margin-top:10px; display:flex; justify-content:space-between;">
+              <div class="brand-box">
+                <span style="font-size:10px; color:#6b21a8; font-weight:bold;">EPI BOUTIQUE</span>
+                <div style="font-size:14px; font-weight:900;">$${formatCurrency(m.debtBoutique)} USD</div>
+              </div>
+              <div class="brand-box">
+                <span style="font-size:10px; color:#1e40af; font-weight:bold;">EXCLUSIVE</span>
+                <div style="font-size:14px; font-weight:900;">$${formatCurrency(m.debtExclusive)} USD</div>
+              </div>
+              <div class="brand-box">
+                <span style="font-size:10px; color:#9d174d; font-weight:bold;">BEAUTY</span>
+                <div style="font-size:14px; font-weight:900;">$${formatCurrency(m.debtBeauty)} USD</div>
+              </div>
+            </div>
+            <div style="margin-top:10px; text-align:right;">
+              <span style="font-size:12px; font-weight:bold; color:#b91c1c;">DEUDA TOTAL CONSOLIDADA: $${formatCurrency(m.totalBalance)} USD</span>
+            </div>
+          </div>
+
+          <h3 style="font-size:13px; margin:15px 0 5px 0;">Historial Cronológico de Movimientos</h3>
+          <table class="tx-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Marca</th>
+                <th>Concepto</th>
+                <th>Medio</th>
+                <th style="text-align:right;">Monto USD</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      executeCleanPrint(statementHtml);
+    }
+
+    function printGeneralReport() {
+      const g = getGlobalMetrics();
+      let rows = '';
+
+      appData.clients.forEach((c, i) => {
+        const m = getClientBrandMetrics(c.id);
+        const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        rows += `
+          <tr style="background:${bg}; border-bottom:1px solid #e2e8f0; font-size:11px;">
+            <td style="padding:6px 8px;"><strong>${c.name}</strong><br><small>${c.doc}</small></td>
+            <td style="padding:6px 8px; text-align:right;">$${formatCurrency(m.debtBoutique)}</td>
+            <td style="padding:6px 8px; text-align:right;">$${formatCurrency(m.debtExclusive)}</td>
+            <td style="padding:6px 8px; text-align:right;">$${formatCurrency(m.debtBeauty)}</td>
+            <td style="padding:6px 8px; text-align:right; font-weight:900; color:${m.totalBalance > 0 ? '#b91c1c' : '#059669'};">
+              $${formatCurrency(m.totalBalance)}
+            </td>
+          </tr>
+        `;
+      });
+
+      const reportHtml = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Reporte de Cartera por Marca</title>
+          <style>
+            @page { size: A4 landscape; margin: 12mm; }
+            body { font-family: sans-serif; font-size: 11px; margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background: #f1f5f9; padding: 6px 8px; text-align: left; font-size: 10px; border-bottom: 2px solid #cbd5e1; }
+          </style>
+        </head>
+        <body>
+          <h2>💎 CREDICONTROL CLOUD - Consolidado de Cartera por Marca</h2>
+          <p>EPI Boutique: $${formatCurrency(g.debtBoutique)} | Exclusive: $${formatCurrency(g.debtExclusive)} | Beauty: $${formatCurrency(g.debtBeauty)} | <strong>Total Cartera: $${formatCurrency(g.totalDebt)} USD</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th style="text-align:right;">Deuda Boutique</th>
+                <th style="text-align:right;">Deuda Exclusive</th>
+                <th style="text-align:right;">Deuda Beauty</th>
+                <th style="text-align:right;">Saldo Total</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      executeCleanPrint(reportHtml);
+    }
+
+    // WHATSAPP
+    function sendWhatsAppSummary() {
+      if (!currentClientIdForDetail) return;
+      const client = appData.clients.find(c => c.id === currentClientIdForDetail);
+      if (!client) return;
+
+      const m = getClientBrandMetrics(client.id);
+      const cleanPhone = client.phone.replace(/[^0-9]/g, '');
+
+      let msg = `*ESTADO DE CUENTA - ${client.name.toUpperCase()}*\n`;
+      msg += `💎 *CrediControl Cloud*\n`;
+      msg += `📅 Fecha: ${new Date().toLocaleDateString('es-ES')}\n\n`;
+      msg += `*DEUDA DISCRIMINADA POR MARCA:*\n`;
+      msg += `👗 EPI Boutique: $${formatCurrency(m.debtBoutique)} USD\n`;
+      msg += `👑 Exclusive: $${formatCurrency(m.debtExclusive)} USD\n`;
+      msg += `✨ Beauty: $${formatCurrency(m.debtBeauty)} USD\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      msg += `📌 *SALDO TOTAL PENDIENTE: $${formatCurrency(m.totalBalance)} USD*\n\n`;
+
+      if (m.totalBalance > 0) {
+        msg += `Puede efectuar su abono indicando la marca respectiva mediante Efectivo, Zelle, Pago Móvil Bs. o USDT.\n¡Gracias por su confianza!`;
+      } else {
+        msg += `✨ ¡Felicidades! Su cuenta se encuentra 100% solvente ($0.00).`;
+      }
+
+      const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+
+    // EXCEL
+    function exportToExcelWorkbook() {
+      try {
+        const clientsData = [
+          ["ID", "CÉDULA", "CLIENTE", "TELÉFONO", "DEUDA BOUTIQUE ($)", "DEUDA EXCLUSIVE ($)", "DEUDA BEAUTY ($)", "TOTAL COMPRAS ($)", "TOTAL ABONADO ($)", "SALDO TOTAL ($)", "ESTADO"]
+        ];
+
+        appData.clients.forEach(c => {
+          const m = getClientBrandMetrics(c.id);
+          clientsData.push([
+            c.id, c.doc, c.name, c.phone,
+            m.debtBoutique, m.debtExclusive, m.debtBeauty,
+            m.totalPurchases, m.totalPaid, m.totalBalance,
+            m.totalBalance > 0 ? "DEUDOR" : "AL DÍA"
+          ]);
+        });
+
+        const salesData = [
+          ["ID", "FECHA", "MARCA", "CLIENTE", "CÉDULA", "ARTÍCULOS", "MONTO USD", "NOTAS"]
+        ];
+        appData.transactions.filter(t => t.type === 'SALE').forEach(t => {
+          const cl = appData.clients.find(c => c.id === t.clientId) || {};
+          salesData.push([t.id, t.date, t.brand, cl.name || '', cl.doc || '', t.concept, t.amount, t.notes || '']);
+        });
+
+        const paymentsData = [
+          ["ID", "FECHA", "MARCA ABONADA", "CLIENTE", "CÉDULA", "MÉTODO", "REFERENCIA", "MONTO USD", "NOTAS"]
+        ];
+        appData.transactions.filter(t => t.type === 'PAYMENT').forEach(t => {
+          const cl = appData.clients.find(c => c.id === t.clientId) || {};
+          paymentsData.push([t.id, t.date, t.brand, cl.name || '', cl.doc || '', t.method, t.ref || '', t.amount, t.notes || '']);
+        });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(clientsData), "Saldos_Por_Marca");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(salesData), "Compras_Credito");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(paymentsData), "Abonos_Marcas");
+
+        const dateSuffix = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `CrediControl_Marcas_${dateSuffix}.xlsx`);
+        showToast('Archivo Excel descargado con éxito.', 'success');
+      } catch (err) {
+        showToast('Error al exportar a Excel', 'error');
+      }
+    }
+
+    // GOOGLE SHEETS SYNC
+    function loadSheetsConfig() {
+      sheetsWebAppUrl = (localStorage.getItem(SHEETS_URL_KEY) || '').trim();
+      const input = document.getElementById('sheetsWebAppUrl');
+      if (input) input.value = sheetsWebAppUrl;
+      updateCloudNavbarStatus();
+    }
+
+    function openSheetsModal() {
+      loadSheetsConfig();
+      openModalDirect('modalSheets');
+    }
+
+    function saveSheetsUrl() {
+      const url = document.getElementById('sheetsWebAppUrl').value.trim();
+      if (!url.startsWith('https://script.google.com/macros/s/')) {
+        showToast('URL inválida de Apps Script', 'error');
+        return;
+      }
+      sheetsWebAppUrl = url;
+      localStorage.setItem(SHEETS_URL_KEY, sheetsWebAppUrl);
+      updateCloudNavbarStatus();
+      showToast('URL guardada correctamente', 'success');
+      triggerFullSync();
+    }
+
+    function disconnectSheets() {
+      sheetsWebAppUrl = '';
+      localStorage.removeItem(SHEETS_URL_KEY);
+      localStorage.removeItem(LAST_SYNC_KEY);
+      document.getElementById('sheetsWebAppUrl').value = '';
+      updateCloudNavbarStatus();
+      updateSyncBanner();
+      showToast('Google Sheets desconectado', 'info');
+    }
+
+    function updateCloudNavbarStatus(isWorking = false) {
+      const dot = document.getElementById('cloudStatusDot');
+      const text = document.getElementById('cloudStatusText');
+      const badge = document.getElementById('sheetsModalStatusBadge');
+      const qBtn = document.getElementById('btnQuickSync');
+
+      if (!sheetsWebAppUrl) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+        text.innerText = "Nube Conectada";
+        badge.innerText = "No Conectado";
+        return;
+      }
+
+      if (isWorking) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 pulse-sync";
+        text.innerText = "Sincronizando...";
+        badge.innerText = "Enviando datos...";
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+        text.innerText = "Sheets: Activo";
+        badge.innerText = "Conectado";
+      }
+    }
+
+    function updateSyncBanner() {
+      const label = document.getElementById('syncLastTimeLabel');
+      const icon = document.getElementById('syncIndicatorIcon');
+      const last = localStorage.getItem(LAST_SYNC_KEY);
+
+      if (last) {
+        label.innerText = `Último respaldo en Google Sheets: ${last}`;
+        icon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i>';
+      } else {
+        label.innerText = `Base de datos Firestore activa. Respaldo en Sheets disponible.`;
+        icon.innerHTML = '<i class="fa-solid fa-cloud text-emerald-500"></i>';
+      }
+    }
+
+    function buildExportPayload() {
+      const clientsList = appData.clients.map(c => {
+        const m = getClientBrandMetrics(c.id);
+        return {
+          id: c.id,
+          doc: c.doc,
+          name: c.name,
+          phone: c.phone,
+          address: c.address || '',
+          debtBoutique: m.debtBoutique,
+          debtExclusive: m.debtExclusive,
+          debtBeauty: m.debtBeauty,
+          totalPurchases: m.totalPurchases,
+          totalPaid: m.totalPaid,
+          totalBalance: m.totalBalance
+        };
+      });
+
+      const purchases = appData.transactions.filter(t => t.type === 'SALE').map(t => {
+        const cl = appData.clients.find(c => c.id === t.clientId) || {};
+        return {
+          id: t.id,
+          date: t.date,
+          brand: t.brand,
+          clientName: cl.name || '',
+          clientDoc: cl.doc || '',
+          concept: t.concept,
+          amount: t.amount,
+          notes: t.notes || ''
+        };
+      });
+
+      const payments = appData.transactions.filter(t => t.type === 'PAYMENT').map(t => {
+        const cl = appData.clients.find(c => c.id === t.clientId) || {};
+        return {
+          id: t.id,
+          date: t.date,
+          brand: t.brand,
+          clientName: cl.name || '',
+          clientDoc: cl.doc || '',
+          method: t.method,
+          ref: t.ref || '',
+          amount: t.amount,
+          notes: t.notes || ''
+        };
+      });
+
+      return { clients: clientsList, purchases, payments };
+    }
+
+    async function triggerFullSync() {
+      if (!sheetsWebAppUrl) return;
+      isSyncing = true;
+      updateCloudNavbarStatus(true);
+      showToast('Enviando respaldo a Google Sheets...', 'info');
+
+      try {
+        await fetch(sheetsWebAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(buildExportPayload())
+        });
+        const now = new Date().toLocaleString('es-ES');
+        localStorage.setItem(LAST_SYNC_KEY, now);
+        updateSyncBanner();
+        showToast('Respaldo en Google Sheets completado.', 'success');
+      } catch (err) {
+        showToast('Error de conexión con Sheets', 'error');
+      } finally {
+        isSyncing = false;
+        updateCloudNavbarStatus(false);
+      }
+    }
+
+    async function syncToGoogleSheetsInBackground() {
+      if (!sheetsWebAppUrl || isSyncing) return;
+      try {
+        await fetch(sheetsWebAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(buildExportPayload())
+        });
+        const now = new Date().toLocaleString('es-ES');
+        localStorage.setItem(LAST_SYNC_KEY, now);
+        updateSyncBanner();
+      } catch(e) {}
+    }
+
+    function testSheetsConnection() {
+      triggerFullSync();
+    }
+
+    function copyAppsScriptCode() {
+      const code = document.getElementById('appsScriptCodeBlock').innerText;
+      copyToClipboard(code);
+      showToast('Código de Apps Script copiado', 'success');
+    }
+
+    // NAVEGACIÓN Y ACCIONES RÁPIDAS
+    function openModalDirect(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+      }
+    }
+
+    function closeModalDirect(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+      }
+    }
+
+    function dismissActionModal(id) {
+      closeModalDirect(id);
+      if (returnToHistoryOnClose && currentClientIdForDetail) {
+        openModalDirect('modalClientHistory');
+        renderHistoryTransactions();
+      } else {
+        returnToHistoryOnClose = false;
+      }
+    }
+
+    function dismissReceiptModal() {
+      closeModalDirect('modalReceipt');
+      if (returnToHistoryOnClose && currentClientIdForDetail) {
+        openModalDirect('modalClientHistory');
+        renderHistoryTransactions();
+      } else {
+        returnToHistoryOnClose = false;
+      }
+    }
+
+    function closeClientHistoryModal() {
+      closeModalDirect('modalClientHistory');
+      currentClientIdForDetail = null;
+      returnToHistoryOnClose = false;
+    }
+
+    function openClientCreationModal() {
+      returnToHistoryOnClose = false;
+      document.getElementById('clientForm').reset();
+      openModalDirect('modalClient');
+    }
+
+    function openGlobalSaleModal() {
+      returnToHistoryOnClose = false;
+      document.getElementById('saleForm').reset();
+      setDefaultDates();
+      populateClientSelects();
+      openModalDirect('modalSale');
+    }
+
+    function openGlobalPaymentModal() {
+      returnToHistoryOnClose = false;
+      document.getElementById('paymentForm').reset();
+      setDefaultDates();
+      populateClientSelects();
+      onPaymentClientOrBrandChanged();
+      openModalDirect('modalPayment');
+    }
+
+    function triggerSaleFromHistory() {
+      if (!currentClientIdForDetail) return;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      populateClientSelects();
+      document.getElementById('saleClientId').value = currentClientIdForDetail;
+      document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('saleAmount').value = '';
+      document.getElementById('saleConcept').value = '';
+      document.getElementById('saleNotes').value = '';
+      openModalDirect('modalSale');
+    }
+
+    function triggerPaymentFromHistory() {
+      if (!currentClientIdForDetail) return;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+
+      populateClientSelects();
+      document.getElementById('paymentClientId').value = currentClientIdForDetail;
+      document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('paymentAmountUSD').value = '';
+      document.getElementById('paymentMethod').value = 'Efectivo ($ USD)';
+      document.getElementById('paymentRef').value = '';
+      document.getElementById('paymentNotes').value = '';
+
+      toggleBsFields();
+      onPaymentClientOrBrandChanged();
+      openModalDirect('modalPayment');
+    }
+
+    function triggerEditClientFromHistory() {
+      if (!currentClientIdForDetail) return;
+      returnToHistoryOnClose = true;
+      closeModalDirect('modalClientHistory');
+      openEditClientDirect(currentClientIdForDetail);
+    }
+
+    function openEditClientDirect(clientId) {
+      const client = appData.clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      document.getElementById('editClientId').value = client.id;
+      document.getElementById('editClientName').value = client.name;
+      document.getElementById('editClientDoc').value = client.doc;
+      document.getElementById('editClientPhone').value = client.phone;
+      document.getElementById('editClientAddress').value = client.address || '';
+      document.getElementById('editClientCreditLimit').value = client.creditLimit || '';
+
+      openModalDirect('modalEditClient');
+    }
+
+    function quickAddSale(clientId) {
+      returnToHistoryOnClose = false;
+      populateClientSelects();
+      document.getElementById('saleClientId').value = clientId;
+      document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('saleAmount').value = '';
+      document.getElementById('saleConcept').value = '';
+      document.getElementById('saleNotes').value = '';
+      openModalDirect('modalSale');
+    }
+
+    function quickAddPayment(clientId) {
+      returnToHistoryOnClose = false;
+      populateClientSelects();
+      document.getElementById('paymentClientId').value = clientId;
+      document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('paymentAmountUSD').value = '';
+      document.getElementById('paymentMethod').value = 'Efectivo ($ USD)';
+      document.getElementById('paymentRef').value = '';
+      document.getElementById('paymentNotes').value = '';
+      toggleBsFields();
+      onPaymentClientOrBrandChanged();
+      openModalDirect('modalPayment');
+    }
+
+    function toggleBsFields() {
+      const m = document.getElementById('paymentMethod').value;
+      const box = document.getElementById('bsDetailsBox');
+      if (m === 'Bolívares (Bs.)') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function calculateBsEquivalent() {
+      const usd = parseFloat(document.getElementById('paymentAmountUSD').value) || 0;
+      const rate = parseFloat(document.getElementById('paymentRate').value) || 0;
+      const totalField = document.getElementById('paymentBsTotal');
+      if (usd > 0 && rate > 0) {
+        totalField.value = `${formatCurrency(usd * rate)} Bs.`;
+      } else {
+        totalField.value = '';
+      }
+    }
+
+    function formatCurrency(val) {
+      const num = parseFloat(val) || 0;
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+    }
+
+    function copyToClipboard(text) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-slate-800 text-white';
+      let icon = 'fa-circle-info';
+      if (type === 'success') {
+        bg = 'bg-fintech-600 text-white';
+        icon = 'fa-circle-check';
+      } else if (type === 'error') {
+        bg = 'bg-rose-600 text-white';
+        icon = 'fa-circle-exclamation';
+      }
+
+      toast.className = `${bg} px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold transform transition-all duration-300 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
