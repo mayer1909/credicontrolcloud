@@ -1888,12 +1888,17 @@ function getOrCreateSheet(ss, name) {
       return true;
     }
 
-    // MODULO REPORTES
+    // MODULO REPORTES (CORREGIDO)
     function openBrandReportModal() {
-      currentReportPeriod = 'all';
-      updateReportPeriodButtons();
-      renderBrandReportData();
-      openModalDirect('modalBrandReport');
+      try {
+        currentReportPeriod = 'all';
+        updateReportPeriodButtons();
+        renderBrandReportData();
+        openModalDirect('modalBrandReport');
+      } catch (err) {
+        console.error("Error al abrir reporte:", err);
+        showToast("Error al cargar el reporte: " + err.message, "error");
+      }
     }
 
     function setReportPeriod(period) {
@@ -1943,13 +1948,18 @@ function getOrCreateSheet(ss, name) {
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
 
-      return appData.transactions.filter(t => {
-        if (!t.date) return false;
+      return (appData.transactions || []).filter(t => {
+        if (!t) return false;
         if (currentReportPeriod === 'all') return true;
-        if (currentReportPeriod === 'today') return t.date === todayStr;
+        if (!t.date || typeof t.date !== 'string') return false;
+
+        const cleanDate = t.date.trim().split('T')[0];
+        if (currentReportPeriod === 'today') return cleanDate === todayStr;
+
+        const tDate = new Date(cleanDate + 'T00:00:00');
+        if (isNaN(tDate.getTime())) return false;
 
         if (currentReportPeriod === 'week') {
-          const tDate = new Date(t.date + 'T00:00:00');
           const day = now.getDay() || 7;
           const monday = new Date(now);
           monday.setDate(now.getDate() - day + 1);
@@ -1958,13 +1968,12 @@ function getOrCreateSheet(ss, name) {
         }
 
         if (currentReportPeriod === 'month') {
-          const tDate = new Date(t.date + 'T00:00:00');
           return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
         }
 
         if (currentReportPeriod === 'custom') {
           if (!reportCustomStart || !reportCustomEnd) return true;
-          return t.date >= reportCustomStart && t.date <= reportCustomEnd;
+          return cleanDate >= reportCustomStart && cleanDate <= reportCustomEnd;
         }
 
         return true;
@@ -1992,7 +2001,11 @@ function getOrCreateSheet(ss, name) {
       let globalPaid = 0;
 
       filteredTxs.forEach(t => {
-        const brand = t.brand || 'EPI Boutique';
+        let brand = t.brand || 'EPI Boutique';
+        if (brand.includes('Beauty')) brand = 'Beauty';
+        else if (brand.includes('Exclusive')) brand = 'Exclusive';
+        else if (brand.includes('Boutique')) brand = 'EPI Boutique';
+
         const amt = parseFloat(t.amount || 0);
         if (!brandStats[brand]) brandStats[brand] = { sales: 0, paid: 0, debt: 0, methods: {} };
 
@@ -2012,12 +2025,12 @@ function getOrCreateSheet(ss, name) {
       let totalPortfolioDebt = 0;
       let brandPortfolioDebt = { 'EPI Boutique': 0, 'Exclusive': 0, 'Beauty': 0 };
 
-      appData.clients.forEach(c => {
+      (appData.clients || []).forEach(c => {
         const m = getClientBrandMetrics(c.id);
-        brandPortfolioDebt['EPI Boutique'] += m.debtBoutique;
-        brandPortfolioDebt['Exclusive'] += m.debtExclusive;
-        brandPortfolioDebt['Beauty'] += m.debtBeauty;
-        totalPortfolioDebt += m.totalBalance;
+        brandPortfolioDebt['EPI Boutique'] += (m.debtBoutique || 0);
+        brandPortfolioDebt['Exclusive'] += (m.debtExclusive || 0);
+        brandPortfolioDebt['Beauty'] += (m.debtBeauty || 0);
+        totalPortfolioDebt += (m.totalBalance || 0);
       });
 
       document.getElementById('repGlobalSales').innerText = `$${formatCurrency(globalSales)}`;
@@ -2025,7 +2038,7 @@ function getOrCreateSheet(ss, name) {
       document.getElementById('repGlobalDebt').innerText = `$${formatCurrency(totalPortfolioDebt)}`;
 
       const recoveryRate = globalSales > 0 ? (globalPaid / globalSales) * 100 : (globalPaid > 0 ? 100 : 0);
-      const cappedRate = Math.min(100, recoveryRate).toFixed(1);
+      const cappedRate = Math.min(100, Math.max(0, recoveryRate)).toFixed(1);
       document.getElementById('repGlobalRate').innerText = `${recoveryRate.toFixed(1)}%`;
       document.getElementById('repGlobalRateBar').style.width = `${cappedRate}%`;
 
@@ -2033,9 +2046,9 @@ function getOrCreateSheet(ss, name) {
       brandTbody.innerHTML = '';
 
       BRANDS.forEach(b => {
-        const s = brandStats[b].sales;
-        const p = brandStats[b].paid;
-        const d = brandPortfolioDebt[b];
+        const s = brandStats[b]?.sales || 0;
+        const p = brandStats[b]?.paid || 0;
+        const d = brandPortfolioDebt[b] || 0;
         const rate = s > 0 ? ((p / s) * 100).toFixed(1) + '%' : (p > 0 ? '100%' : '0%');
         const rateClamped = Math.min(100, Math.max(0, rate));
 
@@ -2105,7 +2118,7 @@ function getOrCreateSheet(ss, name) {
       const debtBox = document.getElementById('repDebtDistributionContainer');
       debtBox.innerHTML = '';
       BRANDS.forEach(b => {
-        const d = brandPortfolioDebt[b];
+        const d = brandPortfolioDebt[b] || 0;
         const pct = totalPortfolioDebt > 0 ? ((d / totalPortfolioDebt) * 100).toFixed(1) : 0;
         let color = b === 'EPI Boutique' ? 'bg-purple-600' : (b === 'Exclusive' ? 'bg-blue-600' : 'bg-pink-600');
         debtBox.innerHTML += `
@@ -2122,85 +2135,6 @@ function getOrCreateSheet(ss, name) {
       });
 
       renderDebtorsRankingTable();
-    }
-
-    function setDebtorRankingFilter(brand) {
-      currentDebtorRankingBrand = brand;
-      ['All', 'Boutique', 'Exclusive', 'Beauty'].forEach(tag => {
-        const btn = document.getElementById(`rankBtn${tag}`);
-        if (!btn) return;
-        const isMatch = (tag === 'All' && brand === 'ALL') || (tag === 'Boutique' && brand === 'EPI Boutique') || (tag === brand);
-        if (isMatch) {
-          btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white";
-        } else {
-          btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100";
-        }
-      });
-      renderDebtorsRankingTable();
-    }
-
-    function renderDebtorsRankingTable() {
-      const tbody = document.getElementById('repDebtorsTableBody');
-      tbody.innerHTML = '';
-
-      let list = appData.clients.map(c => {
-        const m = getClientBrandMetrics(c.id);
-        return {
-          id: c.id,
-          name: c.name,
-          doc: c.doc,
-          phone: c.phone,
-          debtBoutique: m.debtBoutique,
-          debtExclusive: m.debtExclusive,
-          debtBeauty: m.debtBeauty,
-          totalBalance: m.totalBalance
-        };
-      });
-
-      if (currentDebtorRankingBrand === 'EPI Boutique') {
-        list = list.filter(c => c.debtBoutique > 0).sort((a, b) => b.debtBoutique - a.debtBoutique);
-      } else if (currentDebtorRankingBrand === 'Exclusive') {
-        list = list.filter(c => c.debtExclusive > 0).sort((a, b) => b.debtExclusive - a.debtExclusive);
-      } else if (currentDebtorRankingBrand === 'Beauty') {
-        list = list.filter(c => c.debtBeauty > 0).sort((a, b) => b.debtBeauty - a.debtBeauty);
-      } else {
-        list = list.filter(c => c.totalBalance > 0).sort((a, b) => b.totalBalance - a.totalBalance);
-      }
-
-      if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 italic">No hay clientes con deuda pendiente en esta selección.</td></tr>`;
-        return;
-      }
-
-      list.forEach((c, idx) => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 text-xs sm:text-sm";
-        tr.innerHTML = `
-          <td class="py-2.5 px-4 font-bold text-slate-400">${idx + 1}</td>
-          <td class="py-2.5 px-4">
-            <div class="font-bold text-slate-800">${c.name}</div>
-            <div class="text-[11px] text-slate-400">${c.doc} • ${c.phone}</div>
-          </td>
-          <td class="py-2.5 px-4 text-right font-bold ${c.debtBoutique > 0 ? 'text-boutique-700' : 'text-slate-300'}">
-            $${formatCurrency(c.debtBoutique)}
-          </td>
-          <td class="py-2.5 px-4 text-right font-bold ${c.debtExclusive > 0 ? 'text-exclusive-700' : 'text-slate-300'}">
-            $${formatCurrency(c.debtExclusive)}
-          </td>
-          <td class="py-2.5 px-4 text-right font-bold ${c.debtBeauty > 0 ? 'text-beauty-700' : 'text-slate-300'}">
-            $${formatCurrency(c.debtBeauty)}
-          </td>
-          <td class="py-2.5 px-4 text-right font-black text-rose-600">
-            $${formatCurrency(c.totalBalance)}
-          </td>
-          <td class="py-2.5 px-4 text-center">
-            <button onclick="closeModalDirect('modalBrandReport'); showClientHistory('${c.id}');" class="px-2 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
-              Ver Extracto
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
     }
 
     // EXPORTACIÓN A EXCEL Y REPORTES
