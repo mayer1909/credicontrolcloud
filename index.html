@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+<head><script type='text/javascript' nonce='zQVRRICAyAmWTUWPoRnKMg==' src='https://contribution-rt.usercontent.google.com/e91LaAmqGwK4Y0hGvQQzVfsi6Nakz7Euu38LR_xEqUwxYdnHdVP-kGSguuXYxOntK9HLHpq8hbBEEdwyC6EXuqPt4UV4kmrQkpwuXaYYuQluB-EL0yZkdnUxswA6jssPtm0ejUVqAqhJz6Kls79MSPtJSSyhOXMhFeoUHKtzK2DUSp6-mpJAUbzuyMEVgFZXS3iliQsjO6kvzFFJBEQMY2zHMBUpixOPmoOeWTllMzctOxUYW3nA4ih33G2tPRj3ip2y5MKa1maB31GYSFRLMKVbKa4YtQYYekjy4JGe2tod1S9pXTrGVyeckGNjkO35AIdfwv7I1ZjN7gXI1hrfvF2QEAUPdJ_QLUJxHHWREmDcp7FXpw_axP0QbJ7mR4yEftV5G9sn8X1VcqdywyWPk9ECpdhf6vtcW4cQS4WFAFrUBNRWliXbFqsp4VkZP4X7t-O-_u12DQ_1uYOh16ni-DklrTU39Im88ORrC63T2lbDie7A9EiDXmx8f7SoSWOfKrlvVQI8jWfGcyu26VC3kv77Dlyuo9c77XQD_XumMYbY-ts0ka1K4REGLDsWEqNChrC-B_lQX8BDFVMLKnnH0UWRXV5NnUNtkngAHbiXi8IKRG9LJgIB_lhLWgZg6UVCc6BSFXPpl5U8cYKh135VIkoAJ9oKEjuVOUXfeEtpLEiA8i_xPjdPdLbezdiUAXH62cdrWjZLxYtgdykBZlPK2lFML_kn1hsGvBZBSvY'></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CrediControl Cloud - Reportes y Abonos por Marca</title>
@@ -11,8 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
   <!-- SheetJS (XLSX) para exportar a Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <!-- Firebase SDK Compat -->
@@ -162,8 +162,7 @@
           <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Usuario</label>
           <div class="relative">
             <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-            <input type="text" id="loginUsername" required autocomplete="username" placeholder="Nombre de usuario"
-              class="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <input type="text" id="loginUsername" required="" autocomplete="username" placeholder="Nombre de usuario" class="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
           </div>
         </div>
 
@@ -171,8 +170,7 @@
           <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Contraseña</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"
-              class="w-full pl-10 pr-11 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <input type="password" id="loginPassword" required="" autocomplete="current-password" placeholder="••••••••" class="w-full pl-10 pr-11 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition p-1">
               <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
             </button>
@@ -407,13 +405,12 @@
             <!-- Input Búsqueda -->
             <div class="relative flex-1 sm:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-              <input type="text" id="searchInput" oninput="renderClientsTable()" placeholder="Buscar cliente o cédula..." 
-                class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <input type="text" id="searchInput" oninput="renderClientsTable()" placeholder="Buscar cliente o cédula..." class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
             <!-- Filtro de estado -->
             <select id="filterStatus" onchange="renderClientsTable()" class="px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700">
-              <option value="debt" selected>Con Saldo Pendiente</option>
+              <option value="debt" selected="">Con Saldo Pendiente</option>
               <option value="all">Todos los clientes</option>
               <option value="paid">Solventes / Al Día ($0.00)</option>
             </select>
@@ -493,7 +490,7 @@
           <button onclick="printBrandFinancialReport()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white text-slate-900 hover:bg-slate-100 shadow-sm transition">
             <i class="fa-solid fa-print text-indigo-600"></i> Imprimir A4
           </button>
-          <button onclick="closeModalDirect('modalBrandReport')" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
+          <button onclick="closeModalDirect(&#39;modalBrandReport&#39;)" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
             <i class="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
@@ -503,10 +500,10 @@
       <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span class="font-bold text-slate-600 uppercase mr-1"><i class="fa-regular fa-calendar text-indigo-600"></i> Período:</span>
-          <button onclick="setReportPeriod('all')" id="repFilterAll" class="px-3 py-1.5 font-bold rounded-xl bg-indigo-600 text-white shadow-sm">Todo el Histórico</button>
-          <button onclick="setReportPeriod('today')" id="repFilterToday" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Hoy</button>
-          <button onclick="setReportPeriod('week')" id="repFilterWeek" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Esta Semana</button>
-          <button onclick="setReportPeriod('month')" id="repFilterMonth" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Este Mes</button>
+          <button onclick="setReportPeriod(&#39;all&#39;)" id="repFilterAll" class="px-3 py-1.5 font-bold rounded-xl bg-indigo-600 text-white shadow-sm">Todo el Histórico</button>
+          <button onclick="setReportPeriod(&#39;today&#39;)" id="repFilterToday" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Hoy</button>
+          <button onclick="setReportPeriod(&#39;week&#39;)" id="repFilterWeek" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Esta Semana</button>
+          <button onclick="setReportPeriod(&#39;month&#39;)" id="repFilterMonth" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Este Mes</button>
           <button onclick="toggleCustomRangeBox()" id="repFilterCustom" class="px-3 py-1.5 font-medium rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">Rango Personalizado</button>
         </div>
 
@@ -613,10 +610,10 @@
             </div>
             
             <div class="flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-xl">
-              <button onclick="setDebtorRankingFilter('ALL')" id="rankBtnAll" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Todas</button>
-              <button onclick="setDebtorRankingFilter('EPI Boutique')" id="rankBtnBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg text-boutique-700 hover:bg-boutique-50">EPI Boutique</button>
-              <button onclick="setDebtorRankingFilter('Exclusive')" id="rankBtnExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg text-exclusive-700 hover:bg-exclusive-50">Exclusive</button>
-              <button onclick="setDebtorRankingFilter('Beauty')" id="rankBtnBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg text-beauty-700 hover:bg-beauty-50">Beauty</button>
+              <button onclick="setDebtorRankingFilter(&#39;ALL&#39;)" id="rankBtnAll" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Todas</button>
+              <button onclick="setDebtorRankingFilter(&#39;EPI Boutique&#39;)" id="rankBtnBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg text-boutique-700 hover:bg-boutique-50">EPI Boutique</button>
+              <button onclick="setDebtorRankingFilter(&#39;Exclusive&#39;)" id="rankBtnExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg text-exclusive-700 hover:bg-exclusive-50">Exclusive</button>
+              <button onclick="setDebtorRankingFilter(&#39;Beauty&#39;)" id="rankBtnBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg text-beauty-700 hover:bg-beauty-50">Beauty</button>
             </div>
           </div>
 
@@ -642,7 +639,7 @@
 
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs text-slate-500">
         <span>CrediControl Cloud • Sistema Consolidado de Crédito por Marcas</span>
-        <button onclick="closeModalDirect('modalBrandReport')" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+        <button onclick="closeModalDirect(&#39;modalBrandReport&#39;)" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
           Cerrar Reporte
         </button>
       </div>
@@ -699,7 +696,7 @@
             </div>
             <div id="detailDebtBoutique" class="text-lg font-black text-boutique-800">$0.00</div>
           </div>
-          <button onclick="triggerQuickBrandPayment('EPI Boutique')" id="btnAbonarBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-boutique-50 text-boutique-700 hover:bg-boutique-600 hover:text-white border border-boutique-200 transition">
+          <button onclick="triggerQuickBrandPayment(&#39;EPI Boutique&#39;)" id="btnAbonarBoutique" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-boutique-50 text-boutique-700 hover:bg-boutique-600 hover:text-white border border-boutique-200 transition">
             Abonar
           </button>
         </div>
@@ -711,7 +708,7 @@
             </div>
             <div id="detailDebtExclusive" class="text-lg font-black text-exclusive-800">$0.00</div>
           </div>
-          <button onclick="triggerQuickBrandPayment('Exclusive')" id="btnAbonarExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-exclusive-50 text-exclusive-700 hover:bg-exclusive-600 hover:text-white border border-exclusive-200 transition">
+          <button onclick="triggerQuickBrandPayment(&#39;Exclusive&#39;)" id="btnAbonarExclusive" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-exclusive-50 text-exclusive-700 hover:bg-exclusive-600 hover:text-white border border-exclusive-200 transition">
             Abonar
           </button>
         </div>
@@ -723,7 +720,7 @@
             </div>
             <div id="detailDebtBeauty" class="text-lg font-black text-beauty-800">$0.00</div>
           </div>
-          <button onclick="triggerQuickBrandPayment('Beauty')" id="btnAbonarBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-beauty-50 text-beauty-700 hover:bg-beauty-600 hover:text-white border border-beauty-200 transition">
+          <button onclick="triggerQuickBrandPayment(&#39;Beauty&#39;)" id="btnAbonarBeauty" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-beauty-50 text-beauty-700 hover:bg-beauty-600 hover:text-white border border-beauty-200 transition">
             Abonar
           </button>
         </div>
@@ -732,9 +729,9 @@
       <!-- Barra de Acciones del Historial -->
       <div class="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-sm">
         <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-          <button onclick="setHistoryFilter('all')" id="btnFilterAll" class="px-3 py-1 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800">Todos</button>
-          <button onclick="setHistoryFilter('sales')" id="btnFilterSales" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Compras (+)</button>
-          <button onclick="setHistoryFilter('payments')" id="btnFilterPayments" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Abonos (-)</button>
+          <button onclick="setHistoryFilter(&#39;all&#39;)" id="btnFilterAll" class="px-3 py-1 text-xs font-semibold rounded-lg bg-white shadow-sm text-slate-800">Todos</button>
+          <button onclick="setHistoryFilter(&#39;sales&#39;)" id="btnFilterSales" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Compras (+)</button>
+          <button onclick="setHistoryFilter(&#39;payments&#39;)" id="btnFilterPayments" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900">Abonos (-)</button>
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
@@ -785,7 +782,7 @@
         <h3 class="text-base font-bold text-purple-950 flex items-center gap-2">
           <i class="fa-solid fa-cart-shopping text-purple-600"></i> Registrar Compra a Crédito
         </h3>
-        <button onclick="dismissActionModal('modalSale')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalSale&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="saleForm" onsubmit="handleSaveSale(event)" class="p-6 space-y-4">
         
@@ -793,7 +790,7 @@
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca que otorga el crédito *</label>
           <div class="grid grid-cols-3 gap-2.5">
             <label class="brand-radio-label relative block">
-              <input type="radio" name="saleBrand" value="EPI Boutique" checked class="brand-radio-input sr-only">
+              <input type="radio" name="saleBrand" value="EPI Boutique" checked="" class="brand-radio-input sr-only">
               <div class="brand-btn-boutique border border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-boutique-50 transition">
                 <div class="text-xl mb-1"><i class="fa-solid fa-person-dress"></i></div>
                 <div class="font-extrabold text-xs">EPI Boutique</div>
@@ -821,35 +818,32 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cliente *</label>
-          <select id="saleClientId" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+          <select id="saleClientId" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
-            <input type="date" id="saleDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="date" id="saleDate" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
-            <input type="number" step="0.01" min="0.01" id="saleAmount" required placeholder="0.00" 
-              class="w-full px-3 py-2 text-sm font-bold text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="number" step="0.01" min="0.01" id="saleAmount" required="" placeholder="0.00" class="w-full px-3 py-2 text-sm font-bold text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Artículos / Concepto de Compra *</label>
-          <input type="text" id="saleConcept" required placeholder="Ej. Vestido de Fiesta, Calzado de Cuero..." 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="text" id="saleConcept" required="" placeholder="Ej. Vestido de Fiesta, Calzado de Cuero..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observaciones / Notas (Opcional)</label>
-          <input type="text" id="saleNotes" placeholder="Plazo de pago, cuotas o referencia..." 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="text" id="saleNotes" placeholder="Plazo de pago, cuotas o referencia..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
         </div>
 
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="dismissActionModal('modalSale')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="dismissActionModal(&#39;modalSale&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
           <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition shadow-sm">Guardar Compra</button>
         </div>
       </form>
@@ -865,20 +859,20 @@
         <h3 class="text-base font-bold text-emerald-900 flex items-center gap-2">
           <i class="fa-solid fa-hand-holding-dollar text-fintech-600"></i> Registrar Abono a Cuenta
         </h3>
-        <button onclick="dismissActionModal('modalPayment')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalPayment&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="paymentForm" onsubmit="handleSavePayment(event)" class="p-6 space-y-4">
         
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cliente *</label>
-          <select id="paymentClientId" onchange="onPaymentClientOrBrandChanged()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500"></select>
+          <select id="paymentClientId" onchange="onPaymentClientOrBrandChanged()" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500"></select>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Marca a la que se abona *</label>
           <div class="grid grid-cols-3 gap-2.5">
             <label class="brand-radio-label relative block">
-              <input type="radio" name="paymentBrand" value="EPI Boutique" checked onchange="onPaymentClientOrBrandChanged()" class="brand-radio-input sr-only">
+              <input type="radio" name="paymentBrand" value="EPI Boutique" checked="" onchange="onPaymentClientOrBrandChanged()" class="brand-radio-input sr-only">
               <div class="brand-btn-boutique border border-slate-200 rounded-xl p-2.5 text-center bg-slate-50 hover:bg-boutique-50 transition">
                 <div class="text-lg mb-0.5"><i class="fa-solid fa-person-dress"></i></div>
                 <div class="font-extrabold text-xs">EPI Boutique</div>
@@ -918,12 +912,11 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
-            <input type="date" id="paymentDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="date" id="paymentDate" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto a Abonar ($ USD) *</label>
-            <input type="number" step="0.01" min="0.01" id="paymentAmountUSD" required placeholder="0.00" oninput="validatePaymentAmountStrictly()"
-              class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="number" step="0.01" min="0.01" id="paymentAmountUSD" required="" placeholder="0.00" oninput="validatePaymentAmountStrictly()" class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
         </div>
 
@@ -934,7 +927,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Método de Pago *</label>
-          <select id="paymentMethod" onchange="toggleBsFields()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          <select id="paymentMethod" onchange="toggleBsFields()" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
             <option value="Efectivo ($ USD)">💵 Efectivo ($ USD)</option>
             <option value="Zelle">🇺🇸 Zelle (Titular / Correo)</option>
             <option value="Bolívares (Bs.)">🇻🇪 Bolívares (Pago Móvil / Transf.)</option>
@@ -951,7 +944,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 uppercase">Total en Bolívares</label>
-              <input type="text" id="paymentBsTotal" placeholder="0.00 Bs." readonly class="w-full px-2.5 py-1.5 text-xs bg-slate-100 rounded-lg border border-slate-200 font-bold text-slate-800">
+              <input type="text" id="paymentBsTotal" placeholder="0.00 Bs." readonly="" class="w-full px-2.5 py-1.5 text-xs bg-slate-100 rounded-lg border border-slate-200 font-bold text-slate-800">
             </div>
           </div>
         </div>
@@ -959,18 +952,16 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nº Comprobante / Ref</label>
-            <input type="text" id="paymentRef" placeholder="Ej. Zelle #4590 / Ref 1234" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="text" id="paymentRef" placeholder="Ej. Zelle #4590 / Ref 1234" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nota Adicional</label>
-            <input type="text" id="paymentNotes" placeholder="Titular, cajero o detalle..." 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="text" id="paymentNotes" placeholder="Titular, cajero o detalle..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
         </div>
 
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="dismissActionModal('modalPayment')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="dismissActionModal(&#39;modalPayment&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
           <button type="submit" id="btnSubmitPayment" class="px-5 py-2 text-sm font-bold text-white bg-fintech-600 hover:bg-fintech-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition shadow-sm">
             Procesar Abono
           </button>
@@ -988,38 +979,33 @@
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
           <i class="fa-solid fa-user-plus text-indigo-600"></i> Registrar Nuevo Cliente
         </h3>
-        <button onclick="dismissActionModal('modalClient')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalClient&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="clientForm" onsubmit="handleSaveClient(event)" class="p-6 space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre Completo *</label>
-          <input type="text" id="clientName" required placeholder="Ej. Carlos Mendoza" 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="clientName" required="" placeholder="Ej. Carlos Mendoza" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cédula / DNI / RIF *</label>
-            <input type="text" id="clientDoc" required placeholder="V-18456789" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="text" id="clientDoc" required="" placeholder="V-18456789" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teléfono / WhatsApp *</label>
-            <input type="tel" id="clientPhone" required placeholder="+58 412 1234567" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="tel" id="clientPhone" required="" placeholder="+58 412 1234567" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Límite de Crédito ($ USD - Opcional)</label>
-          <input type="number" step="0.01" min="0" id="clientCreditLimit" placeholder="Ej. 200.00" 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="number" step="0.01" min="0" id="clientCreditLimit" placeholder="Ej. 200.00" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Dirección / Sector</label>
-          <textarea id="clientAddress" rows="2" placeholder="Sector, calle, casa o notas..." 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          <textarea id="clientAddress" rows="2" placeholder="Sector, calle, casa o notas..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
         </div>
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="dismissActionModal('modalClient')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="dismissActionModal(&#39;modalClient&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
           <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">Guardar Cliente</button>
         </div>
       </form>
@@ -1035,48 +1021,43 @@
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
           <i class="fa-solid fa-user-pen text-indigo-600 text-lg"></i> Editar Datos del Cliente
         </h3>
-        <button onclick="dismissActionModal('modalEditClient')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalEditClient&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="editClientForm" onsubmit="handleUpdateClient(event)" class="p-6 space-y-4">
         <input type="hidden" id="editClientId">
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre y Apellido *</label>
-          <input type="text" id="editClientName" required placeholder="Nombre completo" 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="editClientName" required="" placeholder="Nombre completo" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cédula / DNI / RIF *</label>
-            <input type="text" id="editClientDoc" required placeholder="Documento" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="text" id="editClientDoc" required="" placeholder="Documento" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teléfono / WhatsApp *</label>
-            <input type="tel" id="editClientPhone" required placeholder="Número telefónico" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="tel" id="editClientPhone" required="" placeholder="Número telefónico" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Límite de Crédito ($ USD)</label>
-          <input type="number" step="0.01" min="0" id="editClientCreditLimit" placeholder="Ej. 250.00" 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="number" step="0.01" min="0" id="editClientCreditLimit" placeholder="Ej. 250.00" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Dirección / Ubicación</label>
-          <input type="text" id="editClientAddress" placeholder="Dirección completa o sector" 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="editClientAddress" placeholder="Dirección completa o sector" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
 
         <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <button type="button" onclick="confirmDeleteClient(document.getElementById('editClientId').value)" class="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition inline-flex items-center gap-1.5">
+          <button type="button" onclick="confirmDeleteClient(document.getElementById(&#39;editClientId&#39;).value)" class="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition inline-flex items-center gap-1.5">
             <i class="fa-regular fa-trash-can"></i> Eliminar Cliente
           </button>
           <div class="flex gap-2">
-            <button type="button" onclick="dismissActionModal('modalEditClient')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+            <button type="button" onclick="dismissActionModal(&#39;modalEditClient&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
             <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm">Guardar Cambios</button>
           </div>
         </div>
@@ -1093,7 +1074,7 @@
         <h3 class="text-base font-bold text-purple-950 flex items-center gap-2">
           <i class="fa-solid fa-pen-to-square text-purple-600"></i> Editar Compra a Crédito
         </h3>
-        <button onclick="dismissActionModal('modalEditSale')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalEditSale&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="editSaleForm" onsubmit="handleUpdateSale(event)" class="p-6 space-y-4">
         <input type="hidden" id="editSaleTxId">
@@ -1128,26 +1109,23 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
-            <input type="date" id="editSaleDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="date" id="editSaleDate" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
-            <input type="number" step="0.01" min="0.01" id="editSaleAmount" required placeholder="0.00" 
-              class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="number" step="0.01" min="0.01" id="editSaleAmount" required="" placeholder="0.00" class="w-full px-3 py-2 text-sm font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
           </div>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Artículos / Concepto *</label>
-          <input type="text" id="editSaleConcept" required placeholder="Descripción de artículos..." 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="text" id="editSaleConcept" required="" placeholder="Descripción de artículos..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observaciones / Notas</label>
-          <input type="text" id="editSaleNotes" placeholder="Plazos, garantía, etc." 
-            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="text" id="editSaleNotes" placeholder="Plazos, garantía, etc." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
         </div>
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="dismissActionModal('modalEditSale')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="dismissActionModal(&#39;modalEditSale&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
           <button type="submit" class="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition shadow-sm">Guardar Cambios</button>
         </div>
       </form>
@@ -1163,7 +1141,7 @@
         <h3 class="text-base font-bold text-emerald-900 flex items-center gap-2">
           <i class="fa-solid fa-pen-to-square text-fintech-600"></i> Modificar Abono
         </h3>
-        <button onclick="dismissActionModal('modalEditPayment')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="dismissActionModal(&#39;modalEditPayment&#39;)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <form id="editPaymentForm" onsubmit="handleUpdatePayment(event)" class="p-6 space-y-4">
         <input type="hidden" id="editPaymentTxId">
@@ -1198,18 +1176,17 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha *</label>
-            <input type="date" id="editPaymentDate" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="date" id="editPaymentDate" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Monto ($ USD) *</label>
-            <input type="number" step="0.01" min="0.01" id="editPaymentAmountUSD" required placeholder="0.00" 
-              class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="number" step="0.01" min="0.01" id="editPaymentAmountUSD" required="" placeholder="0.00" class="w-full px-3 py-2 text-sm font-bold text-fintech-700 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Método de Pago *</label>
-          <select id="editPaymentMethod" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+          <select id="editPaymentMethod" required="" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
             <option value="Efectivo ($ USD)">💵 Efectivo ($ USD)</option>
             <option value="Zelle">🇺🇸 Zelle</option>
             <option value="Bolívares (Bs.)">🇻🇪 Bolívares (Pago Móvil / Transf.)</option>
@@ -1221,18 +1198,16 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nº Comprobante / Ref</label>
-            <input type="text" id="editPaymentRef" placeholder="Ej. Ref 123456" 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="text" id="editPaymentRef" placeholder="Ej. Ref 123456" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nota Adicional</label>
-            <input type="text" id="editPaymentNotes" placeholder="Detalle o tasa..." 
-              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="text" id="editPaymentNotes" placeholder="Detalle o tasa..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-fintech-500">
           </div>
         </div>
 
         <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="dismissActionModal('modalEditPayment')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+          <button type="button" onclick="dismissActionModal(&#39;modalEditPayment&#39;)" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
           <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-fintech-600 hover:bg-fintech-700 rounded-xl transition shadow-sm">Actualizar Abono</button>
         </div>
       </form>
@@ -1252,7 +1227,7 @@
         <p class="text-xs text-slate-500 mt-1" id="deleteModalDesc">Esta acción no se puede deshacer.</p>
       </div>
       <div class="flex gap-2 pt-2">
-        <button onclick="dismissActionModal('modalConfirmDelete')" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Cancelar</button>
+        <button onclick="dismissActionModal(&#39;modalConfirmDelete&#39;)" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Cancelar</button>
         <button id="btnConfirmDeleteAction" class="w-1/2 py-2 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow transition">
           Sí, eliminar
         </button>
@@ -1290,7 +1265,7 @@
             <p class="text-xs text-slate-500">Respaldo automático con saldos por Marca</p>
           </div>
         </div>
-        <button onclick="closeModalDirect('modalSheets')" class="text-slate-400 hover:text-slate-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button onclick="closeModalDirect(&#39;modalSheets&#39;)" class="text-slate-400 hover:text-slate-600 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
       <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 text-sm">
@@ -1300,8 +1275,7 @@
             <span id="sheetsModalStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-200 text-slate-700">No Conectado</span>
           </div>
           <div class="flex gap-2">
-            <input type="url" id="sheetsWebAppUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-fintech-500">
+            <input type="url" id="sheetsWebAppUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-fintech-500">
             <button onclick="saveSheetsUrl()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition whitespace-nowrap">
               Guardar URL
             </button>
@@ -1393,7 +1367,7 @@ function getOrCreateSheet(ss, name) {
       </div>
 
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
-        <button onclick="closeModalDirect('modalSheets')" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+        <button onclick="closeModalDirect(&#39;modalSheets&#39;)" class="px-5 py-2 text-sm font-semibold rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
           Cerrar
         </button>
       </div>
@@ -2062,7 +2036,7 @@ function getOrCreateSheet(ss, name) {
         const s = brandStats[b].sales;
         const p = brandStats[b].paid;
         const d = brandPortfolioDebt[b];
-        const rate = s > 0 ? (p / s) * 100 : (p > 0 ? 100 : 0);
+        const rate = s > 0 ? ((p / s) * 100).toFixed(1) + '%' : (p > 0 ? '100%' : '0%');
         const rateClamped = Math.min(100, Math.max(0, rate));
 
         let brandIcon = '';
@@ -2668,14 +2642,13 @@ function getOrCreateSheet(ss, name) {
       };
 
       if (db) {
-        const docRef = await db.collection("transactions").add(newTx);
-        appData.transactions.push({ id: docRef.id, ...newTx });
+        await db.collection("transactions").add(newTx);
       } else {
         appData.transactions.push({ id: 'tx_' + Date.now(), ...newTx });
+        saveData();
+        refreshDashboard();
       }
 
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalSale');
       document.getElementById('saleForm').reset();
       setDefaultDates();
@@ -2725,13 +2698,12 @@ function getOrCreateSheet(ss, name) {
       if (db) {
         const docRef = await db.collection("transactions").add(newTx);
         createdId = docRef.id;
-        appData.transactions.push({ id: createdId, ...newTx });
       } else {
         appData.transactions.push({ id: createdId, ...newTx });
+        saveData();
+        refreshDashboard();
       }
 
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalPayment');
 
       const savedClient = appData.clients.find(c => c.id === clientId);
@@ -2774,14 +2746,13 @@ function getOrCreateSheet(ss, name) {
       };
 
       if (db) {
-        const docRef = await db.collection("clients").add(newClient);
-        appData.clients.push({ id: docRef.id, ...newClient });
+        await db.collection("clients").add(newClient);
       } else {
         appData.clients.push({ id: 'cli_' + Date.now(), ...newClient });
+        saveData();
+        refreshDashboard();
       }
 
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalClient');
       document.getElementById('clientForm').reset();
       showToast(`Cliente ${name} guardado correctamente`, 'success');
@@ -2808,12 +2779,12 @@ function getOrCreateSheet(ss, name) {
 
       if (db) {
         await db.collection("clients").doc(id).update(updatedData);
+      } else {
+        appData.clients[idx] = { ...appData.clients[idx], ...updatedData };
+        saveData();
+        refreshDashboard();
       }
 
-      appData.clients[idx] = { ...appData.clients[idx], ...updatedData };
-
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalEditClient');
 
       if (returnToHistoryOnClose && currentClientIdForDetail === id) {
@@ -2845,11 +2816,13 @@ function getOrCreateSheet(ss, name) {
           for (const tx of txsToDelete) {
             await db.collection("transactions").doc(tx.id).delete();
           }
+        } else {
+          appData.transactions = appData.transactions.filter(t => t.clientId !== clientId);
+          appData.clients = appData.clients.filter(c => c.id !== clientId);
+          saveData();
+          refreshDashboard();
         }
-        appData.transactions = appData.transactions.filter(t => t.clientId !== clientId);
-        appData.clients = appData.clients.filter(c => c.id !== clientId);
-        saveData();
-        refreshDashboard();
+
         closeModalDirect('modalConfirmDelete');
         if (currentClientIdForDetail === clientId) closeModalDirect('modalClientHistory');
         showToast('Cliente eliminado permanentemente', 'info');
@@ -2900,12 +2873,12 @@ function getOrCreateSheet(ss, name) {
 
       if (db) {
         await db.collection("transactions").doc(txId).update(updatedTx);
+      } else {
+        appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
+        saveData();
+        refreshDashboard();
       }
 
-      appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
-
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalEditSale');
 
       if (returnToHistoryOnClose && currentClientIdForDetail) {
@@ -2958,12 +2931,12 @@ function getOrCreateSheet(ss, name) {
 
       if (db) {
         await db.collection("transactions").doc(txId).update(updatedTx);
+      } else {
+        appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
+        saveData();
+        refreshDashboard();
       }
 
-      appData.transactions[idx] = { ...appData.transactions[idx], ...updatedTx };
-
-      saveData();
-      refreshDashboard();
       closeModalDirect('modalEditPayment');
 
       if (returnToHistoryOnClose && currentClientIdForDetail) {
@@ -2989,11 +2962,12 @@ function getOrCreateSheet(ss, name) {
       btnConfirm.onclick = async () => {
         if (db) {
           await db.collection("transactions").doc(pendingDeleteTxId).delete();
+        } else {
+          appData.transactions = appData.transactions.filter(t => t.id !== pendingDeleteTxId);
+          saveData();
+          refreshDashboard();
         }
-        appData.transactions = appData.transactions.filter(t => t.id !== pendingDeleteTxId);
         pendingDeleteTxId = null;
-        saveData();
-        refreshDashboard();
         closeModalDirect('modalConfirmDelete');
         if (currentClientIdForDetail) showClientHistory(currentClientIdForDetail);
         showToast('Movimiento eliminado y saldo recalculado', 'info');
@@ -3337,18 +3311,30 @@ function getOrCreateSheet(ss, name) {
       const m = getClientBrandMetrics(client.id);
       const cleanPhone = client.phone.replace(/[^0-9]/g, '');
 
-      let msg = `*ESTADO DE CUENTA - ${client.name.toUpperCase()}*\n`;
-      msg += `💎 *CrediControl Cloud*\n`;
-      msg += `📅 Fecha: ${new Date().toLocaleDateString('es-ES')}\n\n`;
-      msg += `*DEUDA DISCRIMINADA POR MARCA:*\n`;
-      msg += `👗 EPI Boutique: $${formatCurrency(m.debtBoutique)} USD\n`;
-      msg += `👑 Exclusive: $${formatCurrency(m.debtExclusive)} USD\n`;
-      msg += `✨ Beauty: $${formatCurrency(m.debtBeauty)} USD\n`;
-      msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-      msg += `📌 *SALDO TOTAL PENDIENTE: $${formatCurrency(m.totalBalance)} USD*\n\n`;
+      let msg = `*ESTADO DE CUENTA - ${client.name.toUpperCase()}*
+`;
+      msg += `💎 *CrediControl Cloud*
+`;
+      msg += `📅 Fecha: ${new Date().toLocaleDateString('es-ES')}
+
+`;
+      msg += `*DEUDA DISCRIMINADA POR MARCA:*
+`;
+      msg += `👗 EPI Boutique: $${formatCurrency(m.debtBoutique)} USD
+`;
+      msg += `👑 Exclusive: $${formatCurrency(m.debtExclusive)} USD
+`;
+      msg += `✨ Beauty: $${formatCurrency(m.debtBeauty)} USD
+`;
+      msg += `━━━━━━━━━━━━━━━━━━━━━
+`;
+      msg += `📌 *SALDO TOTAL PENDIENTE: $${formatCurrency(m.totalBalance)} USD*
+
+`;
 
       if (m.totalBalance > 0) {
-        msg += `Puede efectuar su abono indicando la marca respectiva mediante Efectivo, Zelle, Pago Móvil Bs. o USDT.\n¡Gracias por su confianza!`;
+        msg += `Puede efectuar su abono indicando la marca respectiva mediante Efectivo, Zelle, Pago Móvil Bs. o USDT.
+¡Gracias por su confianza!`;
       } else {
         msg += `✨ ¡Felicidades! Su cuenta se encuentra 100% solvente ($0.00).`;
       }
