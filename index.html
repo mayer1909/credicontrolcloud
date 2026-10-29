@@ -2049,7 +2049,7 @@ function getOrCreateSheet(ss, name) {
         const s = brandStats[b]?.sales || 0;
         const p = brandStats[b]?.paid || 0;
         const d = brandPortfolioDebt[b] || 0;
-        const rate = s > 0 ? ((p / s) * 100).toFixed(1) + '%' : (p > 0 ? '100%' : '0%');
+        const rate = s > 0 ? (p / s) * 100 : (p > 0 ? 100 : 0);
         const rateClamped = Math.min(100, Math.max(0, rate));
 
         let brandIcon = '';
@@ -2091,6 +2091,9 @@ function getOrCreateSheet(ss, name) {
         `;
         brandTbody.appendChild(tr);
       });
+
+
+      
 
       const methodsBox = document.getElementById('repPaymentMethodsContainer');
       methodsBox.innerHTML = '';
